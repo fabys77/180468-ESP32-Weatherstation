@@ -1,4 +1,4 @@
-#include "sds011.h"
+#include "SDS011.h"
 
 SDS011::SDS011(Stream &_ser):ser(_ser) {
 }
