@@ -30,6 +30,7 @@ class WindSensor {
     long windSpeedAvgCnt = 0;
     
     unsigned long lastWindSpeedUpdate = 0;
+    float deltaWindSpeedUpdate = 0;
     unsigned long windSpeedTimeout = 2500;
 
     int beaufort[12] = {2, 6, 12, 19, 30, 40, 51, 62, 75, 87, 103, 117}; //km/h (http://www.hko.gov.hk/education/beaufort.htm)
@@ -39,6 +40,10 @@ class WindSensor {
 
     void addWindDirAvg();
     void addWindSpeedAvg();
+
+    //calibration data
+    uint8_t wind_s_ppr = 2; //WindSpeed sensor: number of pulse per round
+    float wind_s_2piR = 0.66; // 2*pi_greco*R, where R is the wind sensor arm lenght in [m]
 
   public:
     WindSensor(int _speedPin, int _dirPin);
@@ -51,9 +56,12 @@ class WindSensor {
     String getWindDirString();
     void calcWindSpeed();
     float getWindSpeed();
+    float getDeltaWindSpeedUpdate();
     float getWindSpeedAvg(bool clearVars = true);
     int getBeaufort();
     String getBeaufortDesc();
+    void setCal(uint8_t _wind_s_ppr, float _wind_s_2piR); 
+    int getRawADC();
 };
 
 #endif

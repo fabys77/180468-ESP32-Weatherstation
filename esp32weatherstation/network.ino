@@ -62,6 +62,21 @@ void getWiFiSettings() {
   sendData(response);
 }
 
+void setUploadCalSettings() {
+// Under Develop TODO
+  Serial.println("Upload Calibration settings received");
+  Serial.println(server->uri());
+  calsettings.wind_s_ppr = server->arg("wind_s_ppr").toInt();
+  calsettings.wind_s_2piR = server->arg("wind_s_2piR").toFloat();
+  calsettings.rain_mm_pp = server->arg("rain_mm_pp").toFloat();
+  write_calsettings(calsettings);	
+  ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
+  rs.setCal(calsettings.rain_mm_pp);
+}
+
+
+
+
 //store the upload settings configured on the webpage
 void setUploadSettings() {
   Serial.println("Upload settings received");
@@ -75,6 +90,8 @@ void setUploadSettings() {
   tsfAirpressure = server->arg("tsfA").toInt();
   tsfPM25 = server->arg("tsfPM25").toInt();
   tsfPM10 = server->arg("tsfPM10").toInt();
+  tsfTVOC = server->arg("tsfTVOC").toInt();
+  tsfeCO2 = server->arg("tsfeCO2").toInt();
   thingspeakEnabled = (server->arg("tsEnabled") == "1");
   senseBoxStationId = server->arg("sbStationId");
   senseBoxWindSId = server->arg("sbWindSId");
@@ -85,6 +102,8 @@ void setUploadSettings() {
   senseBoxPressId = server->arg("sbPressId");
   senseBoxPM25Id = server->arg("sbPM25Id");
   senseBoxPM10Id = server->arg("sbPM10Id");
+  senseBoxTVOCId = server->arg("sbTVOCId");
+  senseBoxeCO2Id = server->arg("sbeCO2Id");
   senseBoxEnabled = (server->arg("sbEnabled") == "1");
   long recvInterval = server->arg("interval").toInt();
   uploadInterval = ((recvInterval <= 0) ? hourMs : (recvInterval * 60 * 1000)); //convert to ms (default is 1 hr)
@@ -104,6 +123,8 @@ void getUploadSettings() {
   response += String(tsfAirpressure) + ",";
   response += String(tsfPM25) + ",";
   response += String(tsfPM10) + ",";
+  response += String(tsfTVOC) + ",";
+  response += String(tsfeCO2) + ",";
   response += String(thingspeakEnabled ? "1" : "0") + ",";
   response += senseBoxStationId + ",";
   response += senseBoxWindSId + ",";
@@ -114,6 +135,8 @@ void getUploadSettings() {
   response += senseBoxPressId + ",";
   response += senseBoxPM25Id + ",";
   response += senseBoxPM10Id + ",";
+  response += senseBoxTVOCId + ",";
+  response += senseBoxeCO2Id + ",";
   response += String(senseBoxEnabled ? "1" : "0") + ",";
   response += String(uploadInterval / 1000 / 60); //convert to minutes
   sendData(response);
@@ -131,9 +154,37 @@ void getWeatherData() {
   response += String(pressure) + ",";
   response += String(PM25) + ",";
   response += String(PM10) +",";
-  response += String(rainAmountAvg);
+  response += String(rainAmountAvg) + ",";
+  response += String(TVOC) + ",";
+  response += String(eCO2) + ",";
+  response += String(rawH2)+ ",";
+  response += String(rawEthanol)+ ",";
+  response += String(absoluteHumidity);
   sendData(response);
 }
+
+void getCalibration() {
+  Serial.println("Send Calibration data");
+  String response;
+  response += String(ws.getDeltaWindSpeedUpdate()) + ",";
+  response += String(ws.getRawADC()) + ",";
+  response += String("-x-") + ",";
+  response += String("-y-") + ",";
+  response += String("-z-") + ",";
+  response += String(bme.readTemperature()) + ",";
+  response += String(bme.readPressure()) + ",";
+  response += String(bme.readHumidity()) + ",";
+  response += String(PM25) + ",";
+  response += String(PM10) + ",";
+  response += String(TVOC) + ",";
+  response += String(eCO2) + ",";
+  response += String(rs.getRainCount()) + ",";
+  response += String(calsettings.wind_s_ppr) + ",";
+  response += String(calsettings.wind_s_2piR) + ",";
+  response += String(calsettings.rain_mm_pp);
+  sendData(response);
+}
+
 
 //send the battery data to the connected client of the webserver
 void getBatteryData() {
@@ -296,6 +347,8 @@ void configureServer() {
   server->on("/getWiFiSettings", HTTP_GET, getWiFiSettings);
   server->on("/setUploadSettings", HTTP_GET, setUploadSettings);
   server->on("/getUploadSettings", HTTP_GET, getUploadSettings);
+  server->on("/setUploadCalSettings", HTTP_GET, setUploadCalSettings);
+  server->on("/getCalibration", HTTP_GET, getCalibration);
   server->on("/getSSIDList", HTTP_GET, getSSIDList);
   server->on("/restart", HTTP_GET, restart);
   register_functions(server);

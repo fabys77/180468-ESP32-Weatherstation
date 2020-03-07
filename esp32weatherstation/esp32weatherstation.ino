@@ -30,6 +30,7 @@
 #include "datastore.h"
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
+#include "Adafruit_SGP30.h"
 
 #define solarRelay 18
 #define measBatt 34
@@ -47,6 +48,9 @@
 
 #define bmeAddress 0x76
 #define bmeInterval 5000 //ms = 5 seconds
+
+#define SGP30Interval 60000 //ms = 1 minutes
+
 
 #define sdsInterval 60000 //ms = 1 minute
 
@@ -67,6 +71,8 @@ int tsfHumidity = 0;
 int tsfAirpressure = 0;
 int tsfPM25 = 0;
 int tsfPM10 = 0;
+int tsfTVOC = 0;
+int tsfeCO2 = 0;
 
 //senseBox IDs
 bool senseBoxEnabled;
@@ -79,6 +85,8 @@ String senseBoxWindDId;
 String senseBoxRainId;
 String senseBoxPM25Id;
 String senseBoxPM10Id;
+String senseBoxTVOCId;
+String senseBoxeCO2Id;
 
 unsigned long uploadInterval = hourMs;
 bool uploaded = false;
@@ -96,13 +104,24 @@ float windSpeedAvg = 0;
 float windDirAvg = 0;
 float rainAmountAvg = 0;
 
-float temperature = 0; //*C
+float temperature = 0; //°C
 float humidity = 0; //%
 float pressure = 0; //hPa
+uint32_t absoluteHumidity = 0; // mg/m^3
 bool bmeRead = 0;
+bool sgp30Read = 0;
+int  sgp30Count = 0;
+
 
 float PM10 = 0; //particle size: 10 um or less
 float PM25 = 0; //particle size: 2.5 um or less
+
+float TVOC = 0; //ppb
+float eCO2 = 0; //ppm
+float rawH2 = 0;
+float rawEthanol = 0;
+uint16_t TVOC_base = 0; 
+uint16_t eCO2_base = 0;
 
 float batteryVoltage = 0; //v
 float batteryCharging = false;
@@ -111,7 +130,9 @@ float batteryCharging = false;
 String serialIn;
 bool serialRdy = false;
 bool volatile hasBME280 = false;
+bool volatile hasSGP30 = false;
 unsigned long lastBMETime = 0;
+unsigned long lastSGP30Time = 0;
 unsigned long lastSDSTime = 0;
 unsigned long lastUploadTime = 0;
 unsigned long lastAPConnection = 0;
@@ -120,7 +141,7 @@ unsigned long lastBattMeasurement = 0;
 WindSensor ws(windSpeedPin, windDirPin);
 RainSensor rs(rainPin);
 Adafruit_BME280 bme;
-
+Adafruit_SGP30 sgp;
 
 #define USE_SDS011
 //#define USE_HonnywellHPM
@@ -145,6 +166,7 @@ WiFiClient espClient;                       // WiFi ESP Client
 PubSubClient mqttclient(espClient);             // MQTT Client 
 
 Preferences pref;
+calsettings_t calsettings;
 
 TaskHandle_t MQTTTaskHandle = NULL;
 
@@ -160,6 +182,8 @@ void Setup_MQTT_Task( void ){
    1);
 
 }
+
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -184,10 +208,20 @@ void setup() {
   loadUploadSettings();
   loadNetworkCredentials();
   initWiFi();
+  calsettings=read_calsettings();
+  Serial.println("CalValues:");
+  Serial.println(calsettings.wind_s_ppr);
+  Serial.println(calsettings.wind_s_2piR);
+  Serial.println(calsettings.rain_mm_pp);
   
   ws.initWindSensor();
   rs.initRainSensor();
-  
+
+  ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
+  rs.setCal(calsettings.rain_mm_pp);
+  TVOC_base = calsettings.TVOC_base; 
+  eCO2_base = calsettings.eCO2_base;
+      
   Wire.begin(25, 26, 100000); //sda, scl, freq=100kHz
   if(false == bme.begin(bmeAddress)){
         hasBME280 = false;
@@ -199,6 +233,12 @@ void setup() {
                     Adafruit_BME280::SAMPLING_X1, // pressure
                     Adafruit_BME280::SAMPLING_X1, // humidity
                     Adafruit_BME280::FILTER_OFF);
+  }
+
+  if (! sgp.begin()){
+    hasSGP30 = false;
+  } else {
+    sgp.setIAQBaseline(eCO2_base, TVOC_base);  // Will vary for each sensor!   
   }
 
   #ifdef USE_SDS011 
@@ -245,6 +285,12 @@ void loop() {
   if ((lastBMETime + bmeInterval) < millis()) {
     lastBMETime = millis();
     readBME();
+  }
+
+  //read sgp30 every 1 minutes
+  if ((lastSGP30Time + SGP30Interval) < millis()) {
+    lastSGP30Time = millis();
+    readSGP30();
   }
 
   //read SDS011 every minute
@@ -340,11 +386,55 @@ void readBME() {
     temperature = bme.readTemperature();
     humidity = bme.readHumidity();
     pressure = bme.readPressure() / 100.0;
+    absoluteHumidity=getAbsoluteHumidity(temperature, humidity);
   } else {
     humidity=0;
     pressure=0;
   }
 }
+
+void readSGP30() {
+  if (hasBME280){
+          sgp.setHumidity(absoluteHumidity);
+      }    
+      if (! sgp.IAQmeasure()) {
+          TVOC = -1; 
+          eCO2 = -1; 
+      } else {
+          TVOC = sgp.TVOC; 
+          eCO2 = sgp.eCO2;
+          sgp30Count++;
+      }
+      if (! sgp.IAQmeasureRaw()) {
+          rawH2 = -1;
+          rawEthanol = -1;
+      } else {
+          rawH2 = sgp.rawH2;
+          rawEthanol = sgp.rawEthanol;
+      } 
+      if (sgp30Count == 30) {
+        sgp30Count = 0;
+        if (! sgp.getIAQBaseline(&eCO2_base, &TVOC_base)) {
+          Serial.println("Failed to get baseline readings");
+        } else {
+          //TODO : to save and restore
+          Serial.print("****Baseline values: eCO2: 0x"); Serial.print(eCO2_base, HEX);
+          Serial.print(" & TVOC: 0x"); Serial.println(TVOC_base, HEX);
+          calsettings.TVOC_base = TVOC_base; 
+          calsettings.eCO2_base = eCO2_base;
+          write_calsettings(calsettings);
+        }  
+      }
+}
+
+
+uint32_t getAbsoluteHumidity(float temperature, float humidity) {
+    // approximation formula from Sensirion SGP30 Driver Integration chapter 3.15
+    const float absoluteHumidity = 216.7f * ((humidity / 100.0f) * 6.112f * exp((17.62f * temperature) / (243.12f + temperature)) / (273.15f + temperature)); // [g/m^3]
+    const uint32_t absoluteHumidityScaled = static_cast<uint32_t>(1000.0f * absoluteHumidity); // [mg/m^3]
+    return absoluteHumidityScaled;
+}
+
 
 void MQTT_Task( void* prarm ){
    const size_t capacity = 3*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(7);
@@ -412,6 +502,9 @@ void MQTT_Task( void* prarm ){
               data["airpressure"] = pressure;
               data["PM2_5"] = PM25;
               data["PM10"] = PM10;
+              data["TVOC"] = TVOC;
+              data["eCO2"] = eCO2;
+
               
               JsonObject station = root.createNestedObject("station");
               station["battery"] = batteryVoltage;
