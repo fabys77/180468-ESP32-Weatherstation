@@ -149,6 +149,7 @@
 			<a class="menuBtn" id="batteryDataBtn" href="javascript:showBatteryData()">Battery data</a>
 			<a class="menuBtn" id="WiFiSettingsBtn" href="javascript:showWiFiSettings()">WiFi settings</a>
 			<a class="menuBtn" id="uploadSettingsBtn" href="javascript:showUploadSettings()">Upload settings</a>
+			<a class="menuBtn" id="calibrationBtn" href="javascript:showCalibration()">Calibration</a>
             <a class="menuBtn" id="MQTTViewBtn" href="javascript:showMQTTPage()">MQTT settings</a>
             <a class="menuBtn" id="NotesBtn" href="javascript:showNotes()">Notes</a>
  <!--           <a class="menuBtn" id="HttpViewBtn" href="javascript:showWebserSettings()">Webserver</a> -->
@@ -211,6 +212,23 @@
 						</tbody>
 					</table>
 				</div>
+				<div>
+					<table class="vertical">
+						<thead>
+							<tr>
+								<th colspan="2">Pollution</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>TVOC</td><td id="TVOC">-</td>
+							</tr>
+							<tr>
+								<td>eCO2</td><td id="eCO2">-</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
                 <div>
 					<table class="vertical">
 						<thead>
@@ -244,6 +262,9 @@
 					</tbody>
 				</table>
 			</div>
+			<div id="calibration" class="views">
+				Under DEVELOP
+			</div>
             
              <div id="MQTTView" class="views grid">
                  <table>
@@ -266,7 +287,7 @@
                                         MQTT Server <input type="text" id="MQTT_SERVER" name="MQTT_SERVER" value="0.0.0.0"> 
                                         <input style="width:60px" type="number" id="MQTT_PORT" name="ntp_update_delta" min="0" max="65535" value="1833"> Port <br><br>
                                         MQTT Topic <input type="text" id="MQTT_TOPIC" name="MQTT_TOPIC" value=""> <br><br>                                       
-                                        MQTT User <input type="text" id="MQTT_USER" name="MQTT_USER" value=""> 
+                                        MQTT User <input type="text" id="MQTT_USER" name="MQTT_USER" value=""><br> 
                                         MQTT Password <input type="text" id="MQTT_PASS" name="MQTT_PASS" value="" onclick="mqtt_pass_onclick()"><br><br>
                                         
                                          
@@ -390,6 +411,9 @@
 							<tr><td>Airpressure</td><td><select id="tsfAirpressure" onchange="fillFieldSelect()"></select></td></tr>
 							<tr><td>PM2.5</td><td><select id="tsfPM25" onchange="fillFieldSelect()"></select></td></tr>
 							<tr><td>PM10</td><td><select id="tsfPM10" onchange="fillFieldSelect()"></select></td></tr>
+							<tr><td>TVOC</td><td><select id="tsfTVOC" onchange="fillFieldSelect()"></select></td></tr>
+							<tr><td>eCO2</td><td><select id="tsfeCO2" onchange="fillFieldSelect()"></select></td></tr>
+
 						</tbody>
 					</table>
 				</div>
@@ -410,6 +434,8 @@
 							<tr><td>Pressure ID</td><td><input type="text" id="senseBoxPressId"></td></tr>
 							<tr><td>PM2.5 ID</td><td><input type="text" id="senseBoxPM25Id"></td></tr>
 							<tr><td>PM10 ID</td><td><input type="text" id="senseBoxPM10Id"></td></tr>
+							<tr><td>TVOC ID</td><td><input type="text" id="senseBoxTVOCId"></td></tr>
+							<tr><td>eCO2 ID</td><td><input type="text" id="senseBoxeCO2Id"></td></tr>
 						</tbody>
 					</table>
 				</div>
@@ -512,6 +538,8 @@
 			var tsfA = document.getElementById("tsfAirpressure").value;
 			var tsfPM25 = document.getElementById("tsfPM25").value;
 			var tsfPM10 = document.getElementById("tsfPM10").value;
+			var tsfTVOC = document.getElementById("tsfTVOC").value;
+			var tsfeCO2 = document.getElementById("tsfeCO2").value;
 			var tsEnabled = ((document.getElementById("thingspeakEnabled").checked) ? "1" : "0");
 			var sbStationId = document.getElementById("senseBoxStationId").value.replace(/\s/g,'');
 			var sbWindSId = document.getElementById("senseBoxWindSId").value.replace(/\s/g,'');
@@ -522,6 +550,8 @@
 			var sbPressId = document.getElementById("senseBoxPressId").value.replace(/\s/g,'');
 			var sbPM25Id = document.getElementById("senseBoxPM25Id").value.replace(/\s/g,'');
 			var sbPM10Id = document.getElementById("senseBoxPM10Id").value.replace(/\s/g,'');
+			var sbTVOCId = document.getElementById("senseBoxTVOCId").value.replace(/\s/g,'');
+			var sbeCO2Id = document.getElementById("senseBoxeCO2Id").value.replace(/\s/g,'');
 			var sbEnabled = ((document.getElementById("senseBoxEnabled").checked) ? "1" : "0");
 			var interval = document.getElementById("uploadInterval").value;
 			sendRequest("setUploadSettings?tsApi=" + tsApi + 
@@ -543,6 +573,8 @@
 				"&sbPressId=" + sbPressId +
 				"&sbPM25Id=" + sbPM25Id + 
 				"&sbPM10Id=" + sbPM10Id + 
+				"&sbTVOCId=" + sbTVOCId + 
+				"&sbeCO2Id=" + sbeCO2Id + 
 				"&sbEnabled=" + sbEnabled +
 				"&interval=" + interval, 
 				openNotification);
@@ -563,21 +595,23 @@
 			document.getElementById("tsfAirpressure").value = d[6];
 			document.getElementById("tsfPM25").value = d[7];
 			document.getElementById("tsfPM10").value = d[8];
-			document.getElementById("thingspeakEnabled").checked = (d[9] == "1");
-			
-			document.getElementById("senseBoxStationId").value = d[10];
-			document.getElementById("senseBoxWindSId").value = d[11];
-			document.getElementById("senseBoxWindDId").value = d[12];
-			document.getElementById("senseBoxRainId").value = d[13];
-			document.getElementById("senseBoxTempId").value = d[14];
-			document.getElementById("senseBoxHumId").value = d[15];
-			document.getElementById("senseBoxPressId").value = d[16];
-			document.getElementById("senseBoxPM25Id").value = d[17];
-			document.getElementById("senseBoxPM10Id").value = d[18];
-			document.getElementById("senseBoxEnabled").checked = (d[19] == "1");
-			
-			document.getElementById("uploadInterval").value = d[20];
-			
+			document.getElementById("tsfTVOC").value = d[9];
+			document.getElementById("tsfeCO2").value = d[10];
+			document.getElementById("thingspeakEnabled").checked = (d[11] == "1");
+		
+			document.getElementById("senseBoxStationId").value = d[12];
+			document.getElementById("senseBoxWindSId").value = d[13];
+			document.getElementById("senseBoxWindDId").value = d[14];
+			document.getElementById("senseBoxRainId").value = d[15];
+			document.getElementById("senseBoxTempId").value = d[16];
+			document.getElementById("senseBoxHumId").value = d[17];
+			document.getElementById("senseBoxPressId").value = d[18];
+			document.getElementById("senseBoxPM25Id").value = d[19];
+			document.getElementById("senseBoxPM10Id").value = d[20];
+			document.getElementById("senseBoxTVOCId").value = d[21];
+			document.getElementById("senseBoxeCO2Id").value = d[22];
+			document.getElementById("senseBoxEnabled").checked = (d[23] == "1");		
+			document.getElementById("uploadInterval").value = d[24];
 			enableThingspeak();
 			enableSenseBox();
 		}
@@ -600,7 +634,9 @@
 			document.getElementById("pressure").innerHTML = d[5] + "hPa";
 			document.getElementById("PM25").innerHTML = d[6] + "&micro;g/m&sup3;"; //ug/m3
 			document.getElementById("PM10").innerHTML = d[7] + "&micro;g/m&sup3;";
-            document.getElementById("AVGRAIN").innerHTML = d[8];
+            		document.getElementById("AVGRAIN").innerHTML = d[8];
+			document.getElementById("TVOC").innerHTML = d[9];
+			document.getElementById("eCO2").innerHTML = d[10];
 		}
 		
 		//get battery data
@@ -669,6 +705,13 @@
 			getBatteryData();
 			addInterval(getBatteryData, 2000);
 		}
+
+		function showCalibration() {
+			showView("calibration");
+			getCalibration();
+			addInterval(getCalibration, 2000);
+		}
+
 		function showWiFiSettings() {
 			showView("WiFiSettings");
 			getWiFiSettings();
@@ -719,19 +762,19 @@
 		}
 		
 		function fillFieldSelect() {
-			var tsFields = ["tsfWindSpeed", "tsfWindDir", "tsfRainAmount", "tsfTemperature", "tsfHumidity", "tsfAirpressure", "tsfPM25", "tsfPM10"];
+			var tsFields = ["tsfWindSpeed", "tsfWindDir", "tsfRainAmount", "tsfTemperature", "tsfHumidity", "tsfAirpressure", "tsfPM25", "tsfPM10", "tsfTVOC", "tsfeCO2"];
 			var selectedValues = [];
-			for (var i = 0; i < 8; i++) {
+			for (var i = 0; i < 10; i++) {
 				var val = document.getElementById(tsFields[i]).value;
 				if (val != 0)
 					selectedValues.push(val.toString());
 			}
 			
-			for (var a = 0; a < 8; a++) {
+			for (var a = 0; a < 10; a++) {
 				var field = document.getElementById(tsFields[a]);
 				var curVal = field.value;
 				field.innerHTML = "<option value='0'>-</option>";
-				for (var b = 1; b < 9; b++) {
+				for (var b = 1; b < 11; b++) {
 					//show only the fields which are not assigned
 					if (selectedValues.indexOf(b.toString()) == -1 || (selectedValues.indexOf(b.toString()) != -1 && b == curVal))
 						field.innerHTML += "<option value='" + b.toString() + "'>Field " + b.toString() + "</option>";

@@ -67,6 +67,8 @@ int tsfHumidity = 0;
 int tsfAirpressure = 0;
 int tsfPM25 = 0;
 int tsfPM10 = 0;
+int tsfTVOC = 0;
+int tsfeCO2 = 0;
 
 //senseBox IDs
 bool senseBoxEnabled;
@@ -79,6 +81,8 @@ String senseBoxWindDId;
 String senseBoxRainId;
 String senseBoxPM25Id;
 String senseBoxPM10Id;
+String senseBoxTVOCId;
+String senseBoxeCO2Id;
 
 unsigned long uploadInterval = hourMs;
 bool uploaded = false;
@@ -103,6 +107,10 @@ bool bmeRead = 0;
 
 float PM10 = 0; //particle size: 10 um or less
 float PM25 = 0; //particle size: 2.5 um or less
+
+float TVOC = 0; //particle size: 10 um or less
+float eCO2 = 0; //particle size: 2.5 um or less
+
 
 float batteryVoltage = 0; //v
 float batteryCharging = false;
@@ -412,6 +420,9 @@ void MQTT_Task( void* prarm ){
               data["airpressure"] = pressure;
               data["PM2_5"] = PM25;
               data["PM10"] = PM10;
+              data["TVOC"] = TVOC;
+              data["eCO2"] = eCO2;
+
               
               JsonObject station = root.createNestedObject("station");
               station["battery"] = batteryVoltage;
