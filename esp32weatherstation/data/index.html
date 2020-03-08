@@ -264,6 +264,54 @@
 			</div>
 			<div id="calibration" class="views">
 				Under DEVELOP
+				<table>
+					<thead>
+						<tr>
+							<th colspan="2">RAW DATA</th>
+						<tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>windSpeedPeriod</td><td id="windSpeedPeriod">-</td>
+						</tr>
+						<tr>
+							<td>windDirADC</td><td id="windDirADC">-</td>
+						</tr>
+						<tr>
+							<td>windDir GY-271 X</td><td id="windDirGYx">-</td>
+						</tr>
+						<tr>
+							<td>windDir GY-271 Y</td><td id="windDirGYy">-</td>
+						</tr>
+						<tr>
+							<td>windDir GY-271 Z</td><td id="windDirGYz">-</td>
+						</tr>
+						<tr>
+							<td>BME-280 Temp</td><td id="tempBme280">-</td>
+						</tr>
+						<tr>
+							<td>BME-280 Press</td><td id="pressBme280">-</td>
+						</tr>
+						<tr>
+							<td>BME-280 Humidity</td><td id="humBme280">-</td>
+						</tr>
+						<tr>
+							<td>SDS011 PM25</td><td id="pm25Sds011">-</td>
+						</tr>
+						<tr>
+							<td>SDS011 PM10</td><td id="pm10Sds011">-</td>
+						</tr>
+						<tr>
+							<td>SGP30 TVOC</td><td id="tvocSgp30">-</td>
+						</tr>
+						<tr>
+							<td>SGP30 eCO2</td><td id="eCO2Sgp30">-</td>
+						</tr>
+						<tr>
+							<td>rainPeriod</td><td id="rainPeriod">-</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
             
              <div id="MQTTView" class="views grid">
@@ -649,6 +697,28 @@
 			document.getElementById("chargingStatus").innerHTML = (d[1] == "1" ? "Yes" : "No");
 			document.getElementById("toggleChargingBtn").innerHTML = (d[1] == "1" ? "Stop" : "Start") + " charging";
 		}
+
+                //get calibration data: raw data from sensors and costant from json file
+		function getCalibration() {
+			sendRequest("getCalibration", getCalibrationHandler);
+		}
+		function getCalibrationHandler(data) {
+			var d = data.split(",");
+			document.getElementById("windSpeedPeriod").innerHTML = d[0];
+			document.getElementById("windDirADC").innerHTML = d[1];
+			document.getElementById("windDirGYx").innerHTML = d[2];
+			document.getElementById("windDirGYy").innerHTML = d[3];
+			document.getElementById("windDirGYz").innerHTML = d[4];
+			document.getElementById("tempBme280").innerHTML = d[5];
+			document.getElementById("pressBme280").innerHTML = d[6];
+			document.getElementById("humBme280").innerHTML = d[7];
+			document.getElementById("pm25Sds011").innerHTML = d[8];
+			document.getElementById("pm10Sds011").innerHTML = d[10];
+			document.getElementById("tvocSgp30").innerHTML = d[11];
+			document.getElementById("eCO2Sgp30").innerHTML = d[12];
+			document.getElementById("rainPeriod").innerHTML = d[13];
+		}
+
 
 		function sendRequest(addr, func = null) {
 			console.log("requesting: " + addr);

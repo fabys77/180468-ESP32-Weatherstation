@@ -145,6 +145,29 @@ void getWeatherData() {
   sendData(response);
 }
 
+void getCalibration() {
+  Serial.println("Send Calibration data");
+  String response;
+  response += String("0") + ",";
+  response += String("1") + ",";
+  response += String("2") + ",";
+  response += String("3") + ",";
+  response += String("4") + ",";
+  response += String("5") + ",";
+  response += String("6") + ",";
+  response += String("7") + ",";
+  response += String("8") + ",";
+  response += String("9") + ",";
+  response += String("10") + ",";
+  response += String("11") + ",";
+  response += String("12") + ",";
+  response += String("13");
+  sendData(response);
+}
+
+
+
+
 //send the battery data to the connected client of the webserver
 void getBatteryData() {
   Serial.println("Battery data requested");
@@ -306,6 +329,7 @@ void configureServer() {
   server->on("/getWiFiSettings", HTTP_GET, getWiFiSettings);
   server->on("/setUploadSettings", HTTP_GET, setUploadSettings);
   server->on("/getUploadSettings", HTTP_GET, getUploadSettings);
+  server->on("/getCalibration", HTTP_GET, getCalibration);
   server->on("/getSSIDList", HTTP_GET, getSSIDList);
   server->on("/restart", HTTP_GET, restart);
   register_functions(server);
