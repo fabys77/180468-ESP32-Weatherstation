@@ -148,24 +148,21 @@ void getWeatherData() {
 void getCalibration() {
   Serial.println("Send Calibration data");
   String response;
-  response += String("0") + ",";
+  response += String(ws.getDeltaWindSpeedUpdate()) + ",";
   response += String("1") + ",";
   response += String("2") + ",";
   response += String("3") + ",";
   response += String("4") + ",";
-  response += String("5") + ",";
-  response += String("6") + ",";
-  response += String("7") + ",";
-  response += String("8") + ",";
-  response += String("9") + ",";
-  response += String("10") + ",";
-  response += String("11") + ",";
-  response += String("12") + ",";
-  response += String("13");
+  response += String(bme.readTemperature()) + ",";
+  response += String(bme.readPressure()) + ",";
+  response += String(bme.readHumidity()) + ",";
+  response += String(PM25) + ",";
+  response += String(PM10) + ",";
+  response += String(TVOC) + ",";
+  response += String(eCO2) + ",";
+  response += String(rs.getRainCount());
   sendData(response);
 }
-
-
 
 
 //send the battery data to the connected client of the webserver

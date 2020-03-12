@@ -88,7 +88,8 @@ String WindSensor::getWindDirString() {
 void WindSensor::calcWindSpeed() {
   //Serial.println("updating windspeed");
   unsigned long currMillis = millis();
-  float diff = (currMillis - lastWindSpeedUpdate) * 2; //sensor pulses twice per rotation
+  deltaWindSpeedUpdate = (currMillis - lastWindSpeedUpdate);
+  float diff = deltaWindSpeedUpdate * 2; //sensor pulses twice per rotation
   lastWindSpeedUpdate = currMillis;
   if (diff > 10) { //diff > 0.01 s -> 100 hz -> 34 m/s -> 122.4 km/h
     //Serial.println("diff: " + String(diff) + "ms");
@@ -109,6 +110,13 @@ float WindSensor::getWindSpeedAvg(bool clearVars) {
   }
   return temp;
 }
+
+float WindSensor::getDeltaWindSpeedUpdate() {
+  return deltaWindSpeedUpdate;
+}
+
+
+
 
 float WindSensor::getWindSpeed() {
   return windSpeed;

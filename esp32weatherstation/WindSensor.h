@@ -30,6 +30,7 @@ class WindSensor {
     long windSpeedAvgCnt = 0;
     
     unsigned long lastWindSpeedUpdate = 0;
+    float deltaWindSpeedUpdate = 0;
     unsigned long windSpeedTimeout = 2500;
 
     int beaufort[12] = {2, 6, 12, 19, 30, 40, 51, 62, 75, 87, 103, 117}; //km/h (http://www.hko.gov.hk/education/beaufort.htm)
@@ -51,6 +52,7 @@ class WindSensor {
     String getWindDirString();
     void calcWindSpeed();
     float getWindSpeed();
+    float getDeltaWindSpeedUpdate();
     float getWindSpeedAvg(bool clearVars = true);
     int getBeaufort();
     String getBeaufortDesc();
