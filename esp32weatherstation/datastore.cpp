@@ -15,6 +15,11 @@ bool eepread_struct( void* element, uint32_t e_size, uint32_t startaddr  );
 
 #define MQTT_START 2048
 /* this takes 1024byte */
+
+
+#define CAL_START 3072
+/* this takes 1024byte */
+
 /**************************************************************************************************
  *    Function      : datastoresetup
  *    Description   : Gets the EEPROM Emulation set up
@@ -218,6 +223,37 @@ void erase_eeprom( void ){
  
 }
 
+
+/**************************************************************************************************
+ *    Function      : write_calsettings
+ *    Description   : writes calibration stucture
+ *    Input         : calsettings_t
+ *    Output        : none
+ *    Remarks       : none
+ **************************************************************************************************/
+void write_calsettings(calsettings_t c){
+   eepwrite_struct( ( (void*)(&c) ), sizeof(calsettings_t) , CAL_START );
+}
+
+/**************************************************************************************************
+ *    Function      : read_calsettings
+ *    Description   : reads the wifi credentials
+ *    Input         : none
+ *    Output        : calsettings_t
+ *    Remarks       : none
+ **************************************************************************************************/
+calsettings_t read_calsettings( void ){
+  calsettings_t retval;
+  if(false == eepread_struct( (void*)(&retval), sizeof(calsettings_t) , CAL_START ) ){ 
+    Serial.println("DEFAULT_CAL_DATA");
+    /* We need to read the default values */
+    retval.wind_s_ppr = 2; //WindSpeed sensor: number of pulse per round
+    retval.wind_s_2piR = 0.66; // 2*pi_greco*R, where R is the wind sensor arm lenght in [m]
+    retval.rain_mm_pp = 0.33; //Amount of rain [mm] needs for a rain gauge pulse 
+    write_calsettings(retval);
+  }
+  return retval;
+}
 
 
 

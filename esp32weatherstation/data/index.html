@@ -682,9 +682,9 @@
 			document.getElementById("pressure").innerHTML = d[5] + "hPa";
 			document.getElementById("PM25").innerHTML = d[6] + "&micro;g/m&sup3;"; //ug/m3
 			document.getElementById("PM10").innerHTML = d[7] + "&micro;g/m&sup3;";
-            		document.getElementById("AVGRAIN").innerHTML = d[8];
-			document.getElementById("TVOC").innerHTML = d[9];
-			document.getElementById("eCO2").innerHTML = d[10];
+            		document.getElementById("AVGRAIN").innerHTML = d[8] + "mm/hr";
+			document.getElementById("TVOC").innerHTML = d[9] + "ppb";
+			document.getElementById("eCO2").innerHTML = d[10] + "ppm";
 		}
 		
 		//get battery data
@@ -698,7 +698,7 @@
 			document.getElementById("toggleChargingBtn").innerHTML = (d[1] == "1" ? "Stop" : "Start") + " charging";
 		}
 
-                //get calibration data: raw data from sensors and costant from json file
+                //get calibration data: raw data from sensors and costant from eeprom
 		function getCalibration() {
 			sendRequest("getCalibration", getCalibrationHandler);
 		}

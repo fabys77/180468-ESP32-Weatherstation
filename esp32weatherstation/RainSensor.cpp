@@ -32,3 +32,8 @@ int RainSensor::getRainCount() {
   return rainCount;
 }
 
+void RainSensor::setCal(float _rain_mm_pp) {
+  rain_mm_pp = _rain_mm_pp;
+  }
+
+

@@ -104,9 +104,10 @@ float windSpeedAvg = 0;
 float windDirAvg = 0;
 float rainAmountAvg = 0;
 
-float temperature = 0; //*C
+float temperature = 0; //°C
 float humidity = 0; //%
 float pressure = 0; //hPa
+uint32_t absoluteHumidity = 0; // mg/m^3
 bool bmeRead = 0;
 bool sgp30Read = 0;
 int  sgp30Count = 0;
@@ -115,8 +116,8 @@ int  sgp30Count = 0;
 float PM10 = 0; //particle size: 10 um or less
 float PM25 = 0; //particle size: 2.5 um or less
 
-float TVOC = 0; 
-float eCO2 = 0; 
+float TVOC = 0; //ppb
+float eCO2 = 0; //ppm
 float rawH2 = 0;
 float rawEthanol = 0;
 uint16_t TVOC_base = 0; 
@@ -165,6 +166,7 @@ WiFiClient espClient;                       // WiFi ESP Client
 PubSubClient mqttclient(espClient);             // MQTT Client 
 
 Preferences pref;
+calsettings_t calsettings;
 
 TaskHandle_t MQTTTaskHandle = NULL;
 
@@ -206,10 +208,14 @@ void setup() {
   loadUploadSettings();
   loadNetworkCredentials();
   initWiFi();
+  calsettings=read_calsettings();
   
   ws.initWindSensor();
   rs.initRainSensor();
-  
+
+  ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
+  rs.setCal(calsettings.rain_mm_pp);
+    
   Wire.begin(25, 26, 100000); //sda, scl, freq=100kHz
   if(false == bme.begin(bmeAddress)){
         hasBME280 = false;
@@ -280,36 +286,7 @@ void loop() {
   //read sgp30 every 1 minutes
   if ((lastSGP30Time + SGP30Interval) < millis()) {
     lastSGP30Time = millis();
-    if (hasBME280){
-        sgp.setHumidity(getAbsoluteHumidity(temperature, humidity));
-    }    
-    if (! sgp.IAQmeasure()) {
-        TVOC = -1; 
-        eCO2 = -1; 
-    } else {
-        TVOC = sgp.TVOC; 
-        eCO2 = sgp.eCO2;
-        sgp30Count++;
-    }
-    if (! sgp.IAQmeasureRaw()) {
-        rawH2 = -1;
-        rawEthanol = -1;
-    } else {
-        rawH2 = sgp.rawH2;
-        rawEthanol = sgp.rawEthanol;
-    } 
-    if (sgp30Count == 30) {
-      sgp30Count = 0;
-      if (! sgp.getIAQBaseline(&eCO2_base, &TVOC_base)) {
-        Serial.println("Failed to get baseline readings");
-      } else {
-        //TODO : to save and restore
-        Serial.print("****Baseline values: eCO2: 0x"); Serial.print(eCO2_base, HEX);
-        Serial.print(" & TVOC: 0x"); Serial.println(TVOC_base, HEX);
-      }
-    }
-  
-  
+    readSGP30();
   }
 
   //read SDS011 every minute
@@ -405,11 +382,44 @@ void readBME() {
     temperature = bme.readTemperature();
     humidity = bme.readHumidity();
     pressure = bme.readPressure() / 100.0;
+    absoluteHumidity=getAbsoluteHumidity(temperature, humidity);
   } else {
     humidity=0;
     pressure=0;
   }
 }
+
+void readSGP30() {
+  if (hasBME280){
+          sgp.setHumidity(absoluteHumidity);
+      }    
+      if (! sgp.IAQmeasure()) {
+          TVOC = -1; 
+          eCO2 = -1; 
+      } else {
+          TVOC = sgp.TVOC; 
+          eCO2 = sgp.eCO2;
+          sgp30Count++;
+      }
+      if (! sgp.IAQmeasureRaw()) {
+          rawH2 = -1;
+          rawEthanol = -1;
+      } else {
+          rawH2 = sgp.rawH2;
+          rawEthanol = sgp.rawEthanol;
+      } 
+      if (sgp30Count == 30) {
+        sgp30Count = 0;
+        if (! sgp.getIAQBaseline(&eCO2_base, &TVOC_base)) {
+          Serial.println("Failed to get baseline readings");
+        } else {
+          //TODO : to save and restore
+          Serial.print("****Baseline values: eCO2: 0x"); Serial.print(eCO2_base, HEX);
+          Serial.print(" & TVOC: 0x"); Serial.println(TVOC_base, HEX);
+        }  
+      }
+}
+
 
 uint32_t getAbsoluteHumidity(float temperature, float humidity) {
     // approximation formula from Sensirion SGP30 Driver Integration chapter 3.15

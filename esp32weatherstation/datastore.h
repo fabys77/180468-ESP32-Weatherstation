@@ -18,7 +18,11 @@ typedef struct {
   uint16_t mqtttxintervall;
 }mqttsettings_t; /*956 byte */
 
-
+typedef struct {
+  uint8_t wind_s_ppr; //WindSpeed sensor: number of pulse per round
+  float wind_s_2piR; // 2*pi_greco*R, where R is the wind sensor arm lenght in [m]
+  float rain_mm_pp; //Amount of rain [mm] needs for a rain gauge pulse 
+}calsettings_t;
 
 
 /**************************************************************************************************
@@ -93,6 +97,25 @@ mqttsettings_t eepread_mqttsettings( void );
  *    Remarks       : This will invalidate all user data 
  **************************************************************************************************/
 void erase_eeprom( void );
+
+
+/**************************************************************************************************
+ *    Function      : write_calsettings
+ *    Description   : writes calibration stucture
+ *    Input         : calsettings_t
+ *    Output        : none
+ *    Remarks       : none
+ **************************************************************************************************/
+void write_calsettings(calsettings_t c);
+
+/**************************************************************************************************
+ *    Function      : read_calsettings
+ *    Description   : reads the wifi credentials
+ *    Input         : none
+ *    Output        : calsettings_t
+ *    Remarks       : none
+ **************************************************************************************************/
+calsettings_t read_calsettings( void );
 
 
 #endif

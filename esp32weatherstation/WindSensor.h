@@ -41,6 +41,10 @@ class WindSensor {
     void addWindDirAvg();
     void addWindSpeedAvg();
 
+    //calibration data
+    uint8_t wind_s_ppr = 2; //WindSpeed sensor: number of pulse per round
+    float wind_s_2piR = 0.66; // 2*pi_greco*R, where R is the wind sensor arm lenght in [m]
+
   public:
     WindSensor(int _speedPin, int _dirPin);
     void initWindSensor();
@@ -56,6 +60,7 @@ class WindSensor {
     float getWindSpeedAvg(bool clearVars = true);
     int getBeaufort();
     String getBeaufortDesc();
+    void setCal(uint8_t _wind_s_ppr, float _wind_s_2piR); 
 };
 
 #endif

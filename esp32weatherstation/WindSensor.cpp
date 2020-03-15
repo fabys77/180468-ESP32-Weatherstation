@@ -85,11 +85,17 @@ String WindSensor::getWindDirString() {
   }
 }
 
+void WindSensor::setCal(uint8_t _wind_s_ppr, float _wind_s_2piR){
+  wind_s_ppr = _wind_s_ppr;
+  wind_s_2piR = _wind_s_2piR;
+  }
+
+
 void WindSensor::calcWindSpeed() {
   //Serial.println("updating windspeed");
   unsigned long currMillis = millis();
   deltaWindSpeedUpdate = (currMillis - lastWindSpeedUpdate);
-  float diff = deltaWindSpeedUpdate * 2; //sensor pulses twice per rotation
+  float diff = deltaWindSpeedUpdate * wind_s_ppr; //sensor pulses twice per rotation
   lastWindSpeedUpdate = currMillis;
   if (diff > 10) { //diff > 0.01 s -> 100 hz -> 34 m/s -> 122.4 km/h
     //Serial.println("diff: " + String(diff) + "ms");
@@ -97,7 +103,7 @@ void WindSensor::calcWindSpeed() {
     //Serial.println("diff: " + String(diff) + "s");
     float hz = 1.0/diff;
     //Serial.println("hz: " + String(hz));
-    windSpeed = hz * 0.66; //2.4km/h for 1 rot/s -> 2.4/3.6=0.66m/s
+    windSpeed = hz * wind_s_2piR; //2.4km/h for 1 rot/s -> 2.4/3.6=0.66m/s
     //Serial.println("windSpeed: " + String(windSpeed));
   }
 }
