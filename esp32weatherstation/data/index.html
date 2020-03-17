@@ -187,10 +187,13 @@
 								<td>Temperature</td><td id="temperature">-</td>
 							</tr>
 							<tr>
-								<td>Humidity</td><td id="humidity">-</td>
+								<td>Relative Humidity</td><td id="humidity">-</td>
 							</tr>
 							<tr>
 								<td>Airpressure</td><td id="pressure">-</td>
+							</tr>
+							<tr>
+								<td>Absolute Humidity</td><td id="absoluteHumidity">-</td>
 							</tr>
 						</tbody>
 					</table>
@@ -225,6 +228,12 @@
 							</tr>
 							<tr>
 								<td>eCO2</td><td id="eCO2">-</td>
+							</tr>
+							<tr>
+								<td>rawH2</td><td id="rawH2">-</td>
+							</tr>
+							<tr>
+								<td>rawEthanol</td><td id="rawEthanol">-</td>
 							</tr>
 						</tbody>
 					</table>
@@ -310,6 +319,16 @@
 						<tr>
 							<td>rainPeriod</td><td id="rainPeriod">-</td>
 						</tr>
+						<tr>
+							<td>wind_s_ppr</td><td><input type="text" id="wind_s_ppr"></td>
+						</tr>
+						<tr>
+							<td>wind_s_2piR</td><td><input type="text" id="wind_s_2piR"></td>
+						</tr>
+						<tr>
+							<td>rain_mm_pp</td><td><input type="text" id="rain_mm_pp"></td>
+						</tr>
+						</tr><td></td><td><button onclick="setUploadCalSettings()">Submit settings</button></td>
 					</tbody>
 				</table>
 			</div>
@@ -575,6 +594,17 @@
 			getSSIDListHandler(d[1], ";");
 		}
 
+		function setUploadCalSettings() {
+		//Under Develop TODO
+		var calwind_s_ppr = document.getElementById("wind_s_ppr").value;
+		var calwind_s_2piR = document.getElementById("wind_s_2piR").value;
+		var calrain_mm_pp = document.getElementById("rain_mm_pp").value;
+		sendRequest("setUploadCalSettings?wind_s_ppr=" + calwind_s_ppr +
+					         "&wind_s_2piR=" + calwind_s_2piR +
+						 "&rain_mm_pp=" + calrain_mm_pp);
+		}
+
+
 		//get and set thingspeak settings
 		function setUploadSettings() {
 			var tsApi = document.getElementById("thingspeakApi").value.replace(/\s/g,'');
@@ -685,6 +715,9 @@
             		document.getElementById("AVGRAIN").innerHTML = d[8] + "mm/hr";
 			document.getElementById("TVOC").innerHTML = d[9] + "ppb";
 			document.getElementById("eCO2").innerHTML = d[10] + "ppm";
+			document.getElementById("rawH2").innerHTML = d[11] + "xxx";
+			document.getElementById("rawEthanol").innerHTML = d[12] + "xxx";
+			document.getElementById("absoluteHumidity").innerHTML = d[13] + "mg/m&sup3;";
 		}
 		
 		//get battery data
@@ -717,6 +750,9 @@
 			document.getElementById("tvocSgp30").innerHTML = d[10];
 			document.getElementById("eCO2Sgp30").innerHTML = d[11];
 			document.getElementById("rain count").innerHTML = d[12];
+			document.getElementById("wind_s_ppr").innerHTML = d[13];
+			document.getElementById("wind_s_2piR").innerHTML = d[14];
+			document.getElementById("rain_mm_pp").innerHTML = d[15];
 		}
 
 

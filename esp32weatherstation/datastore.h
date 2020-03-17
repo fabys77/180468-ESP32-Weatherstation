@@ -22,6 +22,8 @@ typedef struct {
   uint8_t wind_s_ppr; //WindSpeed sensor: number of pulse per round
   float wind_s_2piR; // 2*pi_greco*R, where R is the wind sensor arm lenght in [m]
   float rain_mm_pp; //Amount of rain [mm] needs for a rain gauge pulse 
+  uint16_t TVOC_base; 
+  uint16_t eCO2_base;
 }calsettings_t;
 
 

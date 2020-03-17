@@ -62,6 +62,21 @@ void getWiFiSettings() {
   sendData(response);
 }
 
+void setUploadCalSettings() {
+// Under Develop TODO
+  Serial.println("Upload Calibration settings received");
+  Serial.println(server->uri());
+  calsettings.wind_s_ppr = server->arg("wind_s_ppr").toInt();
+  calsettings.wind_s_2piR = server->arg("wind_s_2piR").toFloat();
+  calsettings.rain_mm_pp = server->arg("rain_mm_pp").toFloat();
+  write_calsettings(calsettings);	
+  ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
+  rs.setCal(calsettings.rain_mm_pp);
+}
+
+
+
+
 //store the upload settings configured on the webpage
 void setUploadSettings() {
   Serial.println("Upload settings received");
@@ -141,7 +156,10 @@ void getWeatherData() {
   response += String(PM10) +",";
   response += String(rainAmountAvg) + ",";
   response += String(TVOC) + ",";
-  response += String(eCO2);
+  response += String(eCO2) + ",";
+  response += String(rawH2)+ ",";
+  response += String(rawEthanol)+ ",";
+  response += String(absoluteHumidity);
   sendData(response);
 }
 
@@ -160,7 +178,10 @@ void getCalibration() {
   response += String(PM10) + ",";
   response += String(TVOC) + ",";
   response += String(eCO2) + ",";
-  response += String(rs.getRainCount());
+  response += String(rs.getRainCount()) + ",";
+  response += String(calsettings.wind_s_ppr) + ",";
+  response += String(calsettings.wind_s_2piR) + ",";
+  response += String(calsettings.rain_mm_pp);
   sendData(response);
 }
 
@@ -326,6 +347,7 @@ void configureServer() {
   server->on("/getWiFiSettings", HTTP_GET, getWiFiSettings);
   server->on("/setUploadSettings", HTTP_GET, setUploadSettings);
   server->on("/getUploadSettings", HTTP_GET, getUploadSettings);
+  server->on("/setUploadCalSettings", HTTP_GET, setUploadCalSettings);
   server->on("/getCalibration", HTTP_GET, getCalibration);
   server->on("/getSSIDList", HTTP_GET, getSSIDList);
   server->on("/restart", HTTP_GET, restart);

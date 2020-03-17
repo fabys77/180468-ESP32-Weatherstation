@@ -250,6 +250,8 @@ calsettings_t read_calsettings( void ){
     retval.wind_s_ppr = 2; //WindSpeed sensor: number of pulse per round
     retval.wind_s_2piR = 0.66; // 2*pi_greco*R, where R is the wind sensor arm lenght in [m]
     retval.rain_mm_pp = 0.33; //Amount of rain [mm] needs for a rain gauge pulse 
+    retval.TVOC_base = 0; 
+    retval.eCO2_base = 0;
     write_calsettings(retval);
   }
   return retval;

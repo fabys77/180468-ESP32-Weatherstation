@@ -215,7 +215,9 @@ void setup() {
 
   ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
   rs.setCal(calsettings.rain_mm_pp);
-    
+  TVOC_base = calsettings.TVOC_base; 
+  eCO2_base = calsettings.eCO2_base;
+      
   Wire.begin(25, 26, 100000); //sda, scl, freq=100kHz
   if(false == bme.begin(bmeAddress)){
         hasBME280 = false;
@@ -232,9 +234,7 @@ void setup() {
   if (! sgp.begin()){
     hasSGP30 = false;
   } else {
-    hasSGP30 = true;
-    //TODO
-    //sgp.setIAQBaseline(0x8E68, 0x8F41);  // Will vary for each sensor!   
+    sgp.setIAQBaseline(eCO2_base, TVOC_base);  // Will vary for each sensor!   
   }
 
   #ifdef USE_SDS011 
@@ -416,6 +416,9 @@ void readSGP30() {
           //TODO : to save and restore
           Serial.print("****Baseline values: eCO2: 0x"); Serial.print(eCO2_base, HEX);
           Serial.print(" & TVOC: 0x"); Serial.println(TVOC_base, HEX);
+          calsettings.TVOC_base = TVOC_base; 
+          calsettings.eCO2_base = eCO2_base;
+          write_calsettings(calsettings);
         }  
       }
 }
