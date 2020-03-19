@@ -209,6 +209,10 @@ void setup() {
   loadNetworkCredentials();
   initWiFi();
   calsettings=read_calsettings();
+  Serial.println("CalValues:");
+  Serial.println(calsettings.wind_s_ppr);
+  Serial.println(calsettings.wind_s_2piR);
+  Serial.println(calsettings.rain_mm_pp);
   
   ws.initWindSensor();
   rs.initRainSensor();

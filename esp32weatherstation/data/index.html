@@ -317,7 +317,7 @@
 							<td>SGP30 eCO2</td><td id="eCO2Sgp30">-</td>
 						</tr>
 						<tr>
-							<td>rainPeriod</td><td id="rainPeriod">-</td>
+							<td>Rain Count</td><td id="rain_count">-</td>
 						</tr>
 						<tr>
 							<td>wind_s_ppr</td><td><input type="text" id="wind_s_ppr"></td>
@@ -733,8 +733,9 @@
 
                 //get calibration data: raw data from sensors and costant from eeprom
 		function getCalibration() {
-			sendRequest("getCalibration", getCalibrationHandler);
+				sendRequest("getCalibration", getCalibrationHandler);
 		}
+		
 		function getCalibrationHandler(data) {
 			var d = data.split(",");
 			document.getElementById("windSpeedPeriod").innerHTML = d[0];
@@ -749,10 +750,10 @@
 			document.getElementById("pm10Sds011").innerHTML = d[9];
 			document.getElementById("tvocSgp30").innerHTML = d[10];
 			document.getElementById("eCO2Sgp30").innerHTML = d[11];
-			document.getElementById("rain count").innerHTML = d[12];
-			document.getElementById("wind_s_ppr").innerHTML = d[13];
-			document.getElementById("wind_s_2piR").innerHTML = d[14];
-			document.getElementById("rain_mm_pp").innerHTML = d[15];
+			document.getElementById("rain_count").innerHTML = d[12];
+			document.getElementById("wind_s_ppr").value = d[13];
+			document.getElementById("wind_s_2piR").value = d[14];
+			document.getElementById("rain_mm_pp").value = d[15];
 		}
 
 
