@@ -320,13 +320,16 @@
 							<td>Rain Count</td><td id="rain_count">-</td>
 						</tr>
 						<tr>
-							<td>wind_s_ppr</td><td><input type="text" id="wind_s_ppr"></td>
+						<td><input type="checkbox" id="calRefresh" checked="checked">GetFromFlash</td><td>Calibration Input</td>
+						</tr>				
+						<tr>
+							<td>Wind Speed Pulse per Round</td><td><input type="text" id="wind_s_ppr"></td>
 						</tr>
 						<tr>
-							<td>wind_s_2piR</td><td><input type="text" id="wind_s_2piR"></td>
+							<td>Wind Speed 2&#8901;&#960;&#8901;R [m]<BR>R: arm Lenght</td><td><input type="text" id="wind_s_2piR"></td>
 						</tr>
 						<tr>
-							<td>rain_mm_pp</td><td><input type="text" id="rain_mm_pp"></td>
+							<td>Rain Gauge: rain per pulse [mm]</td><td><input type="text" id="rain_mm_pp"></td>
 						</tr>
 						</tr><td></td><td><button onclick="setUploadCalSettings()">Submit settings</button></td>
 					</tbody>
@@ -602,6 +605,7 @@
 		sendRequest("setUploadCalSettings?wind_s_ppr=" + calwind_s_ppr +
 					         "&wind_s_2piR=" + calwind_s_2piR +
 						 "&rain_mm_pp=" + calrain_mm_pp);
+		document.getElementById("calRefresh").checked = true;
 		}
 
 
@@ -737,6 +741,7 @@
 		}
 		
 		function getCalibrationHandler(data) {
+			var calrefr = document.getElementById("calRefresh").checked;			
 			var d = data.split(",");
 			document.getElementById("windSpeedPeriod").innerHTML = d[0];
 			document.getElementById("windDirADC").innerHTML = d[1];
@@ -751,9 +756,12 @@
 			document.getElementById("tvocSgp30").innerHTML = d[10];
 			document.getElementById("eCO2Sgp30").innerHTML = d[11];
 			document.getElementById("rain_count").innerHTML = d[12];
-			document.getElementById("wind_s_ppr").value = d[13];
-			document.getElementById("wind_s_2piR").value = d[14];
-			document.getElementById("rain_mm_pp").value = d[15];
+			if (calrefr) {
+				document.getElementById("wind_s_ppr").value = d[13];
+				document.getElementById("wind_s_2piR").value = d[14];
+				document.getElementById("rain_mm_pp").value = d[15];
+				document.getElementById("calRefresh").checked = false;
+			}
 		}
 
 
