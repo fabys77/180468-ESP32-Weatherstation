@@ -34,6 +34,23 @@
 #include <PubSubClient.h>
 #include "Adafruit_SGP30.h"
 
+
+
+/****************************** 
+ *  Sensor Model Configuration
+ ******************************/
+
+#define USE_SDS011
+//#define USE_HonnywellHPM
+
+// Wind Sensor with Magnetic sensor HMC5883 for direction 
+#define USE_GY_WINDIR
+
+
+/******************************
+*        PIN CONFIGURATION    *
+*******************************/
+
 #define solarRelay 18
 #define measBatt 34
 
@@ -146,13 +163,16 @@ unsigned long lastUploadTime = 0;
 unsigned long lastAPConnection = 0;
 unsigned long lastBattMeasurement = 0;
 
-WindSensor ws(windSpeedPin, windDirPin);
+#ifdef USE_GY_WINDIR
+    WindSensor2 ws(windSpeedPin, windDirPin,12345);
+#else
+    WindSensor  ws(windSpeedPin, windDirPin);
+#endif
+
+
 RainSensor rs(rainPin);
 Adafruit_BME280 bme;
 Adafruit_SGP30 sgp;
-
-#define USE_SDS011
-//#define USE_HonnywellHPM
 
 #ifdef USE_SDS011
 /* If SDS011 is connected */
