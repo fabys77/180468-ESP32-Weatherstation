@@ -61,6 +61,7 @@ class WindSensor {
     int getBeaufort();
     String getBeaufortDesc();
     void setCal(uint8_t _wind_s_ppr, float _wind_s_2piR); 
+    int getRawADC();
 };
 
 #endif

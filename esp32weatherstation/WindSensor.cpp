@@ -170,3 +170,8 @@ String WindSensor::getBeaufortDesc() {
   }
 }
 
+int WindSensor::getRawADC() {
+  int dir = analogRead(dirPin);
+  return dir;
+}
+

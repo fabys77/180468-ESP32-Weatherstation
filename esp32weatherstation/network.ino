@@ -167,10 +167,10 @@ void getCalibration() {
   Serial.println("Send Calibration data");
   String response;
   response += String(ws.getDeltaWindSpeedUpdate()) + ",";
-  response += String("1") + ",";
-  response += String("2") + ",";
-  response += String("3") + ",";
-  response += String("4") + ",";
+  response += String(ws.getRawADC()) + ",";
+  response += String("-x-") + ",";
+  response += String("-y-") + ",";
+  response += String("-z-") + ",";
   response += String(bme.readTemperature()) + ",";
   response += String(bme.readPressure()) + ",";
   response += String(bme.readHumidity()) + ",";

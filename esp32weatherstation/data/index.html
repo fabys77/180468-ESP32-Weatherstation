@@ -272,7 +272,6 @@
 				</table>
 			</div>
 			<div id="calibration" class="views">
-				Under DEVELOP
 				<table>
 					<thead>
 						<tr>
@@ -286,7 +285,7 @@
 						<tr>
 							<td>windDirADC</td><td id="windDirADC">-</td>
 						</tr>
-						<tr>
+					<!--	<tr>
 							<td>windDir GY-271 X</td><td id="windDirGYx">-</td>
 						</tr>
 						<tr>
@@ -294,7 +293,7 @@
 						</tr>
 						<tr>
 							<td>windDir GY-271 Z</td><td id="windDirGYz">-</td>
-						</tr>
+						</tr> -->
 						<tr>
 							<td>BME-280 Temp</td><td id="tempBme280">-</td>
 						</tr>
@@ -598,7 +597,9 @@
 		}
 
 		function setUploadCalSettings() {
-		//Under Develop TODO
+
+
+
 		var calwind_s_ppr = document.getElementById("wind_s_ppr").value;
 		var calwind_s_2piR = document.getElementById("wind_s_2piR").value;
 		var calrain_mm_pp = document.getElementById("rain_mm_pp").value;
@@ -972,7 +973,7 @@
             
         }
         
-                function UpdateNote(){
+        function UpdateNote(){
             var protocol = location.protocol;
             var slashes = protocol.concat("//");
             var host = slashes.concat(window.location.hostname);
@@ -996,8 +997,6 @@
         
          function read_mqttsettings( msg ){
             var jsonObj = JSON.parse(msg);
-            
-            
             document.getElementById("MQTT_USER").value = jsonObj.mqttuser;
             document.getElementById("MQTT_HOST").value = jsonObj.mqtthost;
             document.getElementById("MQTT_SERVER").value = jsonObj.mqttserver;
@@ -1006,9 +1005,7 @@
             document.getElementById("MQTT_TOPIC").value = jsonObj.mqtttopic;
             document.getElementById("MQTT_PASS").type = "password";
             document.getElementById("MQTT_ENA").checked = jsonObj.mqttena;
-            document.getElementById("MQTT_UPDATE_INT").value = jsonObj.mqtttxintervall;
-             
-            
+            document.getElementById("MQTT_UPDATE_INT").value = jsonObj.mqtttxintervall;    
         }
         
         
@@ -1093,10 +1090,8 @@
         
         
         function mqtt_pass_onclick(){
-        
                 document.getElementById("MQTT_PASS").value = "";
                 document.getElementById("MQTT_PASS").type == "text";
-       
        }
        
        
