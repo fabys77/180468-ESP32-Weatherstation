@@ -159,7 +159,8 @@ void getWeatherData() {
   response += String(eCO2) + ",";
   response += String(rawH2)+ ",";
   response += String(rawEthanol)+ ",";
-  response += String(absoluteHumidity);
+  response += String(absoluteHumidity)+ ",";
+  response += String(rainAmountAvgFast);
   sendData(response);
 }
 
