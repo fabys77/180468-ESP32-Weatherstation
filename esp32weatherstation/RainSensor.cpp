@@ -15,7 +15,7 @@ void RainSensor::clearRainAmount() {
 
 void RainSensor::calcRainAmount() {
   //one pulse: 0.33mm rain
-  rainAmount += 0.33;
+  rainAmount += rain_mm_pp;
   rainCount++;
 }
 
@@ -27,6 +27,11 @@ float RainSensor::getRainAmount(bool clearVars) {
     lastClear=millis();
   return temp;
 }
+
+float RainSensor::getRainCurrentAmount() {
+  return rainAmount;
+}
+
 
 int RainSensor::getRainCount() {
   return rainCount;

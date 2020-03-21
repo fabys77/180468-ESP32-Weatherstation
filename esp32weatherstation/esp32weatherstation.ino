@@ -8,6 +8,7 @@
  * From Library Manager
  * Adafruit BME280 Library 1.0.7 by Adafruit
  * Adafruit Unified Sensor 1.0.2 by Adafruit
+ * Adafruit SGP30 Library 1.0.5 by Adafruit
  * ArduinoJson 6.x.x by Benoit Blanchon
  * PubSubClient by Nick O'Leary 
  * CRC32 by Christopher Baker
@@ -26,6 +27,7 @@
 #include <SDS011.h>
 #include "Honnywell.h"
 #include "WindSensor.h"
+#include "WindSensor2.h"
 #include "RainSensor.h"
 #include "datastore.h"
 #include <ArduinoJson.h>
@@ -51,8 +53,10 @@
 
 #define SGP30Interval 60000 //ms = 1 minutes
 
-
 #define sdsInterval 60000 //ms = 1 minute
+
+#define rainInterval 120000 //ms = 2 minute
+
 
 #define lastConnectedTimeout 600000 //ms = 10 minutes: 10 * 60 * 1000
 
@@ -103,6 +107,9 @@ String beaufortDesc = "";
 float windSpeedAvg = 0;
 float windDirAvg = 0;
 float rainAmountAvg = 0;
+float rainAmountPrev = 0;
+float rainAmountAvgFast = 0;
+
 
 float temperature = 0; //°C
 float humidity = 0; //%
@@ -134,6 +141,7 @@ bool volatile hasSGP30 = false;
 unsigned long lastBMETime = 0;
 unsigned long lastSGP30Time = 0;
 unsigned long lastSDSTime = 0;
+unsigned long lastRainTime = 0;
 unsigned long lastUploadTime = 0;
 unsigned long lastAPConnection = 0;
 unsigned long lastBattMeasurement = 0;
@@ -311,6 +319,21 @@ void loop() {
       }
    
   #endif
+
+ //fast rain estimation for webpage
+  if ((lastRainTime + rainInterval) < millis()) {
+    float rainAmountActual = 0;
+    lastRainTime = millis();
+    rainAmountActual = rs.getRainCurrentAmount();
+    if ((rainAmountActual-rainAmountPrev)>=0) {
+      rainAmountAvgFast=(rainAmountActual-rainAmountPrev) * hourMs / rainInterval;
+    }
+    rainAmountPrev = rainAmountActual;
+  }
+
+
+
+
   
   //upload data if the uploadperiod has passed and if WiFi is connected
   if (((lastUploadTime + uploadInterval) < millis()) && (WiFi.status() == WL_CONNECTED)) {
