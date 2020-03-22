@@ -9,9 +9,9 @@ WindSensor2::WindSensor2(int _speedPin, int _dirPin, int32_t _sensorID) {
 void WindSensor2::initWindSensor() {
   pinMode(speedPin, INPUT);
   pinMode(dirPin, ANALOG);
-  mag = Adafruit_HMC5883_Unified(12345);
+  mag = Adafruit_HMC5883_Unified(sensorID);
   if(!mag.begin()){
-    Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
+    Serial.println("No HMC5883 detected");
     hasMag=false;
     }
   else{
@@ -25,15 +25,15 @@ void WindSensor2::setWindSpeedTimeout(unsigned long nWindSpeedTimeout) {
 }
 
 void WindSensor2::updateWindSensor() {
-  if (lastWindSpeedUpdate + windSpeedTimeout < millis()) {
+  if (timeToRun(lastWindSpeedUpdate, windSpeedTimeout)) {
     windSpeed = 0;
   }
-
   //add to average value
   addWindSpeedAvg();
 }
 
 void WindSensor2::determineWindDir() {
+  //TODO
   int dir = analogRead(dirPin);
   for (int i = 0; i < 8; i++) {
     if ((dir > (winDirVal[i] - D_MARGIN)) && (dir < (winDirVal[i] + D_MARGIN))) {
@@ -55,6 +55,7 @@ int WindSensor2::getWindDir() {
 }
 
 void WindSensor2::addWindDirAvg() {
+  //TODO
   //add the new measurement to the previous measurements and calculate the average value
   float windDirAngle = (float)getWindDir() * PI / 4; //calculate wind direction to angle
   windDirAvgCnt++;
@@ -197,6 +198,57 @@ void WindSensor2::displaySensorDetails()
   Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" uT");  
   Serial.println("------------------------------------");
 }
+
+bool WindSensor2::timeToRun(unsigned long lastTime, unsigned long interval){
+  //This function is safety when timer wrap
+  unsigned long futureEvent = lastTime + interval; 
+  if (futureEvent < interval) {
+    //timer will wrap
+    if ((futureEvent < millis()) && (millis() < (lastTime + 2*interval)))
+        return true;
+      else
+        return false;
+  }
+  else {
+      if (futureEvent < millis())
+        return true;
+      else
+        return false;
+  }
+}
+
+void WindSensor2::readMagneticSensor(){
+  if (hasMag){
+    mag.getEvent(&event);
+  }
+}
+
+int16_t WindSensor2::getXmag(){
+  if (hasMag)
+    return event.magnetic.x;
+  else
+    return -1;
+}
+
+int16_t WindSensor2::getYmag(){
+  if (hasMag)
+    return event.magnetic.y;
+  else
+    return -1;
+}
+
+int16_t WindSensor2::getZmag(){
+  if (hasMag)
+    return event.magnetic.z;
+  else
+    return -1;
+}
+
+
+
+
+
+
 
 
 

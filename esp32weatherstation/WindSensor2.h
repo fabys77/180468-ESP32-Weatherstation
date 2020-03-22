@@ -23,8 +23,9 @@ class WindSensor2 {
     Adafruit_HMC5883_Unified mag;
     int32_t sensorID;
     sensor_t sensor;
-    bool hasMag;   
-    
+    sensors_event_t event; 
+    bool hasMag;
+
     
     //                  N     NE    E    SE   S    SW    W     NW
     int winDirVal[8] = {3000, 1690, 200, 570, 975, 2368, 3905, 3518};
@@ -49,10 +50,12 @@ class WindSensor2 {
 
     void addWindDirAvg();
     void addWindSpeedAvg();
+    bool timeToRun(unsigned long lastTime, unsigned long interval);
 
     //calibration data
     uint8_t wind_s_ppr = 2; //WindSpeed sensor: number of pulse per round
     float wind_s_2piR = 0.66; // 2*pi_greco*R, where R is the wind sensor arm lenght in [m]
+    
 
   public:
     WindSensor2(int _speedPin, int _dirPin, int32_t _sensorID);
@@ -72,6 +75,14 @@ class WindSensor2 {
     void setCal(uint8_t _wind_s_ppr, float _wind_s_2piR); 
     int getRawADC();
     void displaySensorDetails();
+
+    //New Setction
+    void readMagneticSensor();
+    int16_t getXmag();
+    int16_t getYmag();
+    int16_t getZmag();
+
+
 };
 
 #endif

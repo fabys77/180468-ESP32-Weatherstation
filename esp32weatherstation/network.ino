@@ -169,9 +169,16 @@ void getCalibration() {
   String response;
   response += String(ws.getDeltaWindSpeedUpdate()) + ",";
   response += String(ws.getRawADC()) + ",";
+#ifdef USE_GY_WINDIR
+  ws.readMagneticSensor();
+  response += String(ws.getXmag()) + ",";
+  response += String(ws.getYmag()) + ",";
+  response += String(ws.getZmag()) + ",";
+#else
   response += String("-x-") + ",";
   response += String("-y-") + ",";
   response += String("-z-") + ",";
+#endif
   response += String(bme.readTemperature()) + ",";
   response += String(bme.readPressure()) + ",";
   response += String(bme.readHumidity()) + ",";
