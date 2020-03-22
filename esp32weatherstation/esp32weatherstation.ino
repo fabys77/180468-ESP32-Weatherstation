@@ -310,20 +310,20 @@ void loop() {
   readRainSensor();
 
   //read bme280 every 5 seconds
-  if ((lastBMETime + bmeInterval) < millis()) {
+  if (timeToRun(lastBMETime, bmeInterval)){
     lastBMETime = millis();
     readBME();
   }
 
   //read sgp30 every 1 minutes
-  if ((lastSGP30Time + SGP30Interval) < millis()) {
+  if (timeToRun(lastSGP30Time, SGP30Interval)){
     lastSGP30Time = millis();
     readSGP30();
   }
 
   //read SDS011 every minute
   #ifdef USE_SDS011
-  if ((lastSDSTime + sdsInterval) < millis()) {
+  if (timeToRun(lastSDSTime, sdsInterval)){
     lastSDSTime = millis();
     if (!sds.getData(&PM25, &PM10))
       Serial.println("Failed to read SDS011");
@@ -332,7 +332,7 @@ void loop() {
 
   #ifdef HonnywellHPM
     hpm.ProcessData();
-    if ((lastSDSTime + sdsInterval) < millis()) {
+    if (timeToRun(lastSDSTime, sdsInterval)){
       lastSDSTime = millis();
       if (!hpm.getData(&PM25, &PM10))
         Serial.println("Failed to read HPM");
@@ -341,7 +341,7 @@ void loop() {
   #endif
 
  //fast rain estimation for webpage
-  if ((lastRainTime + rainInterval) < millis()) {
+  if (timeToRun(lastRainTime, rainInterval)){
     float rainAmountActual = 0;
     lastRainTime = millis();
     rainAmountActual = rs.getRainCurrentAmount();
@@ -356,7 +356,7 @@ void loop() {
 
   
   //upload data if the uploadperiod has passed and if WiFi is connected
-  if (((lastUploadTime + uploadInterval) < millis()) && (WiFi.status() == WL_CONNECTED)) {
+  if ((timeToRun(lastUploadTime, uploadInterval)) && (WiFi.status() == WL_CONNECTED)) {
     lastUploadTime = millis();
     Serial.println("Upload interval time passed");
     
@@ -421,6 +421,24 @@ void readRainSensor() {
     rs.calcRainAmount();
   }
   prevRainPinVal = digitalRead(rainPin);
+}
+
+bool timeToRun(unsigned long lastTime, unsigned long interval){
+  //This function is safety when timer wrap
+  unsigned long futureEvent = lastTime + interval; 
+  if (futureEvent < interval) {
+    //timer will wrap
+    if ((futureEvent < millis()) && (millis() < (lastTime + 2*interval)))
+        return true;
+      else
+        return false;
+  }
+  else {
+      if (futureEvent < millis())
+        return true;
+      else
+        return false;
+  }
 }
 
 void readBME() {
