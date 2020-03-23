@@ -21,6 +21,7 @@ The station shall be detected via usb as serial port. Set the ide to use the por
  * ArduinoJson 6.x.x by Benoit Blanchon
  * PubSubClient by Nick O'Leary 
  * CRC32 by Christopher Baker
+ * QMC5883L Compass Arduino Library by MPrograms
   
 ###### Requiered patches to the libraries
  * For the PubSubClient , go to your library folder and search for the PubSubClient. Inside its folder search in 'src/' folder for PubSubClient.h and look for the following line:

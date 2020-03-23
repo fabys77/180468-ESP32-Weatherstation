@@ -170,7 +170,7 @@ void getCalibration() {
   response += String(ws.getDeltaWindSpeedUpdate()) + ",";
   response += String(ws.getRawADC()) + ",";
 #ifdef USE_GY_WINDIR
-  ws.readMagneticSensor();
+  ws.readCompass();
   response += String(ws.getXmag()) + ",";
   response += String(ws.getYmag()) + ",";
   response += String(ws.getZmag()) + ",";

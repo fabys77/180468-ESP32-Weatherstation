@@ -1,23 +1,26 @@
 #include "WindSensor2.h"
 
-WindSensor2::WindSensor2(int _speedPin, int _dirPin, int32_t _sensorID) {
+WindSensor2::WindSensor2(int _speedPin, int _dirPin) {
   speedPin = _speedPin;
   dirPin = _dirPin;
-  sensorID = _sensorID;
 }
 
 void WindSensor2::initWindSensor() {
+  byte error;
+  hasMag = false;
   pinMode(speedPin, INPUT);
   pinMode(dirPin, ANALOG);
-  mag = Adafruit_HMC5883_Unified(sensorID);
-  if(!mag.begin()){
-    Serial.println("No HMC5883 detected");
-    hasMag=false;
-    }
-  else{
-    displaySensorDetails();
+  Wire.beginTransmission(byte(13)); //0x0D device
+  error = Wire.endTransmission();
+  if (error == 0) {
     hasMag=true;
-    }
+    compass.init();
+    Serial.println("QMC5883L Found");
+    readCompass();
+  }else{
+    Serial.println("QMC5883L not Found");
+    hasMag=false;
+  }  
 }
 
 void WindSensor2::setWindSpeedTimeout(unsigned long nWindSpeedTimeout) {
@@ -35,6 +38,7 @@ void WindSensor2::updateWindSensor() {
 void WindSensor2::determineWindDir() {
   //TODO
   int dir = analogRead(dirPin);
+  //readMagneticSensor();
   for (int i = 0; i < 8; i++) {
     if ((dir > (winDirVal[i] - D_MARGIN)) && (dir < (winDirVal[i] + D_MARGIN))) {
       windDir = i;
@@ -186,18 +190,6 @@ int WindSensor2::getRawADC() {
   return dir;
 }
 
-void WindSensor2::displaySensorDetails()
-{
-  mag.getSensor(&sensor);
-  Serial.println("------------------------------------");
-  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" uT");
-  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" uT");
-  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" uT");  
-  Serial.println("------------------------------------");
-}
 
 bool WindSensor2::timeToRun(unsigned long lastTime, unsigned long interval){
   //This function is safety when timer wrap
@@ -217,35 +209,40 @@ bool WindSensor2::timeToRun(unsigned long lastTime, unsigned long interval){
   }
 }
 
-void WindSensor2::readMagneticSensor(){
+void WindSensor2::readCompass() {
   if (hasMag){
-    mag.getEvent(&event);
+    // Read compass values
+    compass.read();
+    // Return XYZ readings
+    magX = compass.getX();
+    magY = compass.getY();
+    magZ = compass.getZ();
+    //  Serial.print("X: ");
+    //  Serial.print(x);
+    //  Serial.print(" Y: ");
+    //  Serial.print(y);
+    //  Serial.print(" Z: ");
+    //  Serial.print(z);
+    //  Serial.println();
+  }else{
+    magX = -1;
+    magY = -1;
+    magZ = -1;  
   }
 }
 
-int16_t WindSensor2::getXmag(){
-  if (hasMag)
-    return event.magnetic.x;
-  else
-    return -1;
+
+int WindSensor2::getXmag(){
+    return magX;
 }
 
-int16_t WindSensor2::getYmag(){
-  if (hasMag)
-    return event.magnetic.y;
-  else
-    return -1;
+int WindSensor2::getYmag(){
+    return magY;
 }
 
-int16_t WindSensor2::getZmag(){
-  if (hasMag)
-    return event.magnetic.z;
-  else
-    return -1;
+int WindSensor2::getZmag(){
+    return magZ;
 }
-
-
-
 
 
 

@@ -3,8 +3,8 @@
 
 #include "Arduino.h"
 #include <math.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_HMC5883_U.h>
+#include <QMC5883LCompass.h>
+
 
 #define D_MARGIN 10
 
@@ -20,13 +20,10 @@
 class WindSensor2 {
   private:
     //new section
-    Adafruit_HMC5883_Unified mag;
-    int32_t sensorID;
-    sensor_t sensor;
-    sensors_event_t event; 
+    QMC5883LCompass compass;
     bool hasMag;
-
-    
+    int magX=-1, magY=-1, magZ=-1;
+   
     //                  N     NE    E    SE   S    SW    W     NW
     int winDirVal[8] = {3000, 1690, 200, 570, 975, 2368, 3905, 3518};
     
@@ -58,7 +55,7 @@ class WindSensor2 {
     
 
   public:
-    WindSensor2(int _speedPin, int _dirPin, int32_t _sensorID);
+    WindSensor2(int _speedPin, int _dirPin);
     void initWindSensor();
     void setWindSpeedTimeout(unsigned long nWindSpeedTimeout);
     void updateWindSensor();
@@ -74,14 +71,12 @@ class WindSensor2 {
     String getBeaufortDesc();
     void setCal(uint8_t _wind_s_ppr, float _wind_s_2piR); 
     int getRawADC();
-    void displaySensorDetails();
 
     //New Setction
-    void readMagneticSensor();
-    int16_t getXmag();
-    int16_t getYmag();
-    int16_t getZmag();
-
+    void readCompass();
+    int getXmag();
+    int getYmag();
+    int getZmag();
 
 };
 

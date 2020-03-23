@@ -12,7 +12,7 @@
  * ArduinoJson 6.x.x by Benoit Blanchon
  * PubSubClient by Nick O'Leary 
  * CRC32 by Christopher Baker
- * 
+ * QMC5883L Compass Arduino Library by MPrograms
  *********************************************************************************************/
 
 #include <WiFi.h>
@@ -164,7 +164,7 @@ unsigned long lastAPConnection = 0;
 unsigned long lastBattMeasurement = 0;
 
 #ifdef USE_GY_WINDIR
-    WindSensor2 ws(windSpeedPin, windDirPin,12345);
+    WindSensor2 ws(windSpeedPin, windDirPin);
 #else
     WindSensor  ws(windSpeedPin, windDirPin);
 #endif
@@ -236,6 +236,9 @@ void setup() {
   loadUploadSettings();
   loadNetworkCredentials();
   initWiFi();
+  
+  Wire.begin(25, 26, 100000); //sda, scl, freq=100kHz
+
   calsettings=read_calsettings();
   Serial.println("CalValues:");
   Serial.println(calsettings.wind_s_ppr);
@@ -249,8 +252,7 @@ void setup() {
   rs.setCal(calsettings.rain_mm_pp);
   TVOC_base = calsettings.TVOC_base; 
   eCO2_base = calsettings.eCO2_base;
-      
-  Wire.begin(25, 26, 100000); //sda, scl, freq=100kHz
+        
   if(false == bme.begin(bmeAddress)){
         hasBME280 = false;
   } else {
@@ -276,9 +278,8 @@ void setup() {
   #ifdef USE_HonnywellHPM
     hpm.begin();
   #endif
-  Setup_MQTT_Task();
- 
-  
+  Setup_MQTT_Task(); 
+  //i2cscan();
 }
 
 void loop() {
@@ -314,6 +315,9 @@ void loop() {
     lastBMETime = millis();
     readBME();
   }
+
+
+  
 
   //read sgp30 every 1 minutes
   if (timeToRun(lastSGP30Time, SGP30Interval)){
@@ -453,6 +457,53 @@ void readBME() {
     pressure=0;
   }
 }
+
+
+
+void i2cscan()
+{
+  byte error, address;
+  int nDevices;
+ 
+  Serial.println("Scanning...");
+ 
+  nDevices = 0;
+  for(address = 1; address < 127; address++ )
+  {
+    // The i2c_scanner uses the return value of
+    // the Write.endTransmisstion to see if
+    // a device did acknowledge to the address.
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+ 
+    if (error == 0)
+    {
+      Serial.print("I2C device found at address 0x");
+      if (address<16)
+        Serial.print("0");
+      Serial.print(address,HEX);
+      Serial.println("  !");
+ 
+      nDevices++;
+    }
+    else if (error==4)
+    {
+      Serial.print("Unknown error at address 0x");
+      if (address<16)
+        Serial.print("0");
+      Serial.println(address,HEX);
+    }    
+  }
+  if (nDevices == 0)
+    Serial.println("No I2C devices found\n");
+  else
+    Serial.println("done\n");
+ 
+  delay(5000);           // wait 5 seconds for next scan
+}
+
+
+
 
 void readSGP30() {
   if (hasBME280){
