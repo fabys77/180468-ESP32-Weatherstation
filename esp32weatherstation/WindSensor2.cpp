@@ -1,4 +1,5 @@
 #include "WindSensor2.h"
+#include "math.h"
 
 WindSensor2::WindSensor2(int _speedPin, int _dirPin) {
   speedPin = _speedPin;
@@ -36,22 +37,15 @@ void WindSensor2::updateWindSensor() {
 }
 
 void WindSensor2::determineWindDir() {
-  //TODO
-  int dir = analogRead(dirPin);
-  //readMagneticSensor();
-  for (int i = 0; i < 8; i++) {
-    if ((dir > (winDirVal[i] - D_MARGIN)) && (dir < (winDirVal[i] + D_MARGIN))) {
-      windDir = i;
-      lastDir = i;
-      
-      //add to average value
-      addWindDirAvg();
-      return;
-    }
+  if (hasMag){
+    readCompass();
+    calculateDir();
+    windDir=(int)fmod(fmod((windDirAngle+SECT_ANGLE),360),SECT_ANGLE);
+    lastDir=windDir;
+    addWindDirAvg();}
+  else{
+    windDir=-1;
   }
-  windDir = -1;
-
-  addWindDirAvg();
 }
 
 int WindSensor2::getWindDir() {
@@ -59,12 +53,10 @@ int WindSensor2::getWindDir() {
 }
 
 void WindSensor2::addWindDirAvg() {
-  //TODO
   //add the new measurement to the previous measurements and calculate the average value
-  float windDirAngle = (float)getWindDir() * PI / 4; //calculate wind direction to angle
   windDirAvgCnt++;
-  float x = cos(windDirAvg * PI / 180) * (windDirAvgCnt - 1) / windDirAvgCnt + cos((float)windDirAngle) / windDirAvgCnt;
-  float y = sin(windDirAvg * PI / 180) * (windDirAvgCnt - 1) / windDirAvgCnt + sin((float)windDirAngle) / windDirAvgCnt;
+  float x = cos(windDirAvg * PI / 180) * (windDirAvgCnt - 1) / windDirAvgCnt + cos(windDirAngle) / windDirAvgCnt;
+  float y = sin(windDirAvg * PI / 180) * (windDirAvgCnt - 1) / windDirAvgCnt + sin(windDirAngle) / windDirAvgCnt;
   windDirAvg = atan2(y, x) * 180 / PI;
 }
 
@@ -244,9 +236,62 @@ int WindSensor2::getZmag(){
     return magZ;
 }
 
+void WindSensor2::calculateDir(){
+  double windir_rad;
+  windir_rad=atan2((corr_coef*(ny*magY+nz*magZ)),(dx*magX+dz*magZ));
+  windDirAngle = (float) fmod(((windir_rad+2*PI)*180/PI),360.0);
+}
 
+void WindSensor2::setwdirmode(byte _windir_mode){
+  windir_mode=_windir_mode;
+  switch (_windir_mode) {
+    case Y_X_p:
+      ny=1;
+      nz=0; 
+      dx=1; 
+      dz=0;
+      break;
+   case Y_X_n:
+      ny=-1;
+      nz=0; 
+      dx=1; 
+      dz=0;
+      break;
+   case Y_Z_p:
+      ny=1;
+      nz=0; 
+      dx=0; 
+      dz=1;
+      break;
+   case Y_Z_n:
+      ny=-1;
+      nz=0; 
+      dx=0; 
+      dz=1;
+      break;
+   case Z_X_p:
+      ny=0;
+      nz=1; 
+      dx=1; 
+      dz=0;
+      break;
+   case Z_X_n:
+      ny=0;
+      nz=-1; 
+      dx=1; 
+      dz=0;
+      break;
+   default:      
+      ny=1;
+      nz=0; 
+      dx=1; 
+      dz=0;
+  }
+}
 
+byte WindSensor2::getwdirmode(){
+  return windir_mode;
 
-
+}
 
 
