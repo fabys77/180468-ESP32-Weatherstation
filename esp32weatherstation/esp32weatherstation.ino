@@ -43,7 +43,7 @@
 #define USE_SDS011
 //#define USE_HonnywellHPM
 
-// Wind Sensor with Magnetic sensor HMC5883 for direction 
+// Wind Sensor with Magnetic sensor QMC5883L for direction 
 #define USE_GY_WINDIR
 
 
@@ -249,6 +249,14 @@ void setup() {
   rs.initRainSensor();
 
   ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
+  #ifdef USE_GY_WINDIR
+   ws.setwdirmode(calsettings.windir_mode);
+   ws.setMagCoef(calsettings.magCoef);
+   ws.setXoffset(calsettings.Xoffset);
+   ws.setYoffset(calsettings.Yoffset);
+   ws.setZoffset(calsettings.Zoffset);
+   ws.setNorthOffset(calsettings.northOffset);
+  #endif
   rs.setCal(calsettings.rain_mm_pp);
   TVOC_base = calsettings.TVOC_base; 
   eCO2_base = calsettings.eCO2_base;
@@ -549,7 +557,7 @@ uint32_t getAbsoluteHumidity(float temperature, float humidity) {
 
 
 void MQTT_Task( void* prarm ){
-   const size_t capacity = 3*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(7);
+   const size_t capacity = 3*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(15);
    DynamicJsonDocument  root(capacity);
    String JsonString = "";
    uint32_t ulNotificationValue;
@@ -615,15 +623,15 @@ void MQTT_Task( void* prarm ){
               data["PM2_5"] = PM25;
               data["PM10"] = PM10;
               data["TVOC"] = TVOC;
-              data["eCO2"] = eCO2;
-
-              
+              data["eCO2"] = eCO2;             
+                          
               JsonObject station = root.createNestedObject("station");
               station["battery"] = batteryVoltage;
               station["charging"] = batteryCharging;
               serializeJson(root,JsonString);
               Serial.println(JsonString);
               mqttclient.publish(Settings.mqtttopic, JsonString.c_str(), true); 
+              root.clear();
             }
        }
        vTaskDelay( 100/portTICK_PERIOD_MS );

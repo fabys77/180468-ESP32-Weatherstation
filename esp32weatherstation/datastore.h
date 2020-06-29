@@ -24,6 +24,12 @@ typedef struct {
   float rain_mm_pp; //Amount of rain [mm] needs for a rain gauge pulse 
   uint16_t TVOC_base; 
   uint16_t eCO2_base;
+  byte windir_mode;
+  float magCoef;
+  int Xoffset;
+  int Yoffset;
+  int Zoffset;
+  float northOffset;
 }calsettings_t;
 
 

@@ -3,6 +3,7 @@
 #include <ESPmDNS.h>
 #include <DNSServer.h>
 
+
 #define DNS_PORT ( 53 )
 
 DNSServer* dnsServer=NULL;
@@ -63,14 +64,30 @@ void getWiFiSettings() {
 }
 
 void setUploadCalSettings() {
-// Under Develop TODO
   Serial.println("Upload Calibration settings received");
   Serial.println(server->uri());
   calsettings.wind_s_ppr = server->arg("wind_s_ppr").toInt();
   calsettings.wind_s_2piR = server->arg("wind_s_2piR").toFloat();
   calsettings.rain_mm_pp = server->arg("rain_mm_pp").toFloat();
-  write_calsettings(calsettings);	
-  ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
+  #ifdef USE_GY_WINDIR
+    calsettings.windir_mode = (byte) server->arg("magWindirMode").toInt();
+    calsettings.magCoef = server->arg("magCoef").toFloat();
+    calsettings.Xoffset = server->arg("magXoffset").toInt();
+    calsettings.Yoffset = server->arg("magYoffset").toInt();
+    calsettings.Zoffset = server->arg("magZoffset").toInt();
+    calsettings.northOffset = server->arg("magNorthOffset").toInt();
+  #endif
+  write_calsettings(calsettings);
+  ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR); 
+  #ifdef USE_GY_WINDIR
+    ws.setwdirmode(calsettings.windir_mode);
+    ws.setMagCoef(calsettings.magCoef);
+    ws.setXoffset(calsettings.Xoffset);
+    ws.setYoffset(calsettings.Yoffset);
+    ws.setZoffset(calsettings.Zoffset);
+    ws.setNorthOffset(calsettings.northOffset);
+    ws.setWindirCal_mode(server->arg("magWindirAutocal").toInt());
+  #endif
   rs.setCal(calsettings.rain_mm_pp);
 }
 
@@ -189,7 +206,28 @@ void getCalibration() {
   response += String(rs.getRainCount()) + ",";
   response += String(calsettings.wind_s_ppr) + ",";
   response += String(calsettings.wind_s_2piR) + ",";
-  response += String(calsettings.rain_mm_pp);
+  response += String(calsettings.rain_mm_pp) + ",";
+#ifdef USE_GY_WINDIR
+  //calculate calibration
+  ws.calculateWindirCal();
+  response += String(ws.getwdirmode()) + ",";
+  response += String(ws.getMagCoef()) + ",";
+  response += String(ws.getXoffset()) + ",";
+  response += String(ws.getYoffset()) + ",";
+  response += String(ws.getZoffset()) + ",";
+  response += String(ws.getNorthOffset()) + ",";
+  response += String(ws.getMaxMagx()) + ",";
+  response += String(ws.getMinMagx()) + ",";
+  response += String(ws.getMaxMagy()) + ",";
+  response += String(ws.getMinMagy()) + ",";
+  response += String(ws.getMaxMagz()) + ",";
+  response += String(ws.getMinMagz()) + ",";
+  response += String(ws.getWindDirAngle());
+
+#else
+
+  response += "0,1,0,0,0,0,0,0,0,0,0,0,0";
+#endif
   sendData(response);
 }
 

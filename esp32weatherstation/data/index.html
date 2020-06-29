@@ -333,6 +333,55 @@
 						<tr>
 							<td>Rain Gauge: rain per pulse [mm]</td><td><input type="text" id="rain_mm_pp"></td>
 						</tr>
+						<tr>
+							<td>Magnetic Wind Direction Mode</td><td><select id="magWindirMode">
+							  <option value="0">Y_X_p</option>
+  							  <option value="1">Y_X_n</option>
+  							  <option value="2">Y_Z_p</option>
+  							  <option value="3">Y_Z_n</option>
+  							  <option value="4">Z_X_p</option>
+  							  <option value="5">Z_X_n</option>
+							</select></td>
+						</tr>
+						<tr>
+							<td>Mag Coef Norm</td><td><input type="text" id="magCoef"></td>
+						</tr>
+						<tr>
+							<td>Mag X offset</td><td><input type="text" id="magXoffset"></td>
+						</tr>
+						<tr>
+							<td>Mag Y offset</td><td><input type="text" id="magYoffset"></td>
+						</tr>
+						<tr>
+							<td>Mag Z offset</td><td><input type="text" id="magZoffset"></td>
+						</tr>
+						<tr>
+							<td>North Offset [deg]</td><td><input type="text" id="magNorthOffset"></td>
+						</tr>
+						<tr>
+							<td>Magnetic Wind Auto Calibration</td><td><input type="checkbox" id="magWindirAutocal"></td>
+						</tr>						
+						<tr>
+							<td>maxMagx</td><td id="maxMagx">-</td>
+						</tr>
+						<tr>
+							<td>minMagx</td><td id="minMagx">-</td>
+						</tr>
+						<tr>
+							<td>maxMagy</td><td id="maxMagy">-</td>
+						</tr>
+						<tr>
+							<td>minMagy</td><td id="minMagy">-</td>
+						</tr>
+						<tr>
+							<td>maxMagz</td><td id="maxMagz">-</td>
+						</tr>
+						<tr>
+							<td>minMagz</td><td id="minMagz">-</td>
+						</tr>
+						<tr>
+							<td>Current Wind Dir</td><td id="calWindDir">-</td>
+						</tr>
 						</tr><td></td><td><button onclick="setUploadCalSettings()">Submit settings</button></td>
 					</tbody>
 				</table>
@@ -360,7 +409,8 @@
                                         <input style="width:60px" type="number" id="MQTT_PORT" name="ntp_update_delta" min="0" max="65535" value="1833"> Port <br><br>
                                         MQTT Topic <input type="text" id="MQTT_TOPIC" name="MQTT_TOPIC" value=""> <br><br>                                       
                                         MQTT User <input type="text" id="MQTT_USER" name="MQTT_USER" value=""><br> 
-                                        MQTT Password <input type="text" id="MQTT_PASS" name="MQTT_PASS" value="" onclick="mqtt_pass_onclick()"><br><br>
+					MQTT Password <input type="password" id="MQTT_PASS" name="MQTT_PASS" value=""><br><br>
+<!--                                        MQTT Password <input type="text" id="MQTT_PASS" name="MQTT_PASS" value="" onclick="mqtt_pass_onclick()"><br><br> -->
                                         
                                          
                                          
@@ -601,14 +651,26 @@
 
 		function setUploadCalSettings() {
 
-
-
 		var calwind_s_ppr = document.getElementById("wind_s_ppr").value;
 		var calwind_s_2piR = document.getElementById("wind_s_2piR").value;
 		var calrain_mm_pp = document.getElementById("rain_mm_pp").value;
+		var calmagWindirMode = document.getElementById("magWindirMode").value;
+		var calmagWindirAutocal = ((document.getElementById("magWindirAutocal").checked) ? "1" : "0");
+		var calmagCoef = document.getElementById("magCoef").value;
+		var calmagXoffset = document.getElementById("magXoffset").value;
+		var calmagYoffset = document.getElementById("magYoffset").value;
+		var calmagZoffset = document.getElementById("magZoffset").value;
+		var calmagNorthOffset = document.getElementById("magNorthOffset").value;
 		sendRequest("setUploadCalSettings?wind_s_ppr=" + calwind_s_ppr +
 					         "&wind_s_2piR=" + calwind_s_2piR +
-						 "&rain_mm_pp=" + calrain_mm_pp);
+						 "&rain_mm_pp=" + calrain_mm_pp +
+						 "&magWindirMode=" + calmagWindirMode +
+						 "&magWindirAutocal=" + calmagWindirAutocal +
+						 "&magCoef=" + calmagCoef +
+						 "&magXoffset=" + calmagXoffset +
+						 "&magYoffset=" + calmagYoffset +
+						 "&magZoffset=" + calmagZoffset +
+						 "&magNorthOffset=" + calmagNorthOffset);
 		document.getElementById("calRefresh").checked = true;
 		}
 
@@ -746,7 +808,9 @@
 		}
 		
 		function getCalibrationHandler(data) {
-			var calrefr = document.getElementById("calRefresh").checked;			
+			var calrefr = document.getElementById("calRefresh").checked;
+			var windirAutocal = document.getElementById("magWindirAutocal").checked;
+					
 			var d = data.split(",");
 			document.getElementById("windSpeedPeriod").innerHTML = d[0];
 			document.getElementById("windDirADC").innerHTML = d[1];
@@ -761,11 +825,30 @@
 			document.getElementById("tvocSgp30").innerHTML = d[10];
 			document.getElementById("eCO2Sgp30").innerHTML = d[11];
 			document.getElementById("rain_count").innerHTML = d[12];
+			document.getElementById("calWindDir").innerHTML = d[28];
 			if (calrefr) {
 				document.getElementById("wind_s_ppr").value = d[13];
 				document.getElementById("wind_s_2piR").value = d[14];
 				document.getElementById("rain_mm_pp").value = d[15];
+				document.getElementById("magWindirMode").value = d[16];
+				document.getElementById("magCoef").value = d[17];
+				document.getElementById("magXoffset").value = d[18];
+				document.getElementById("magYoffset").value = d[19];
+				document.getElementById("magZoffset").value = d[20];
+				document.getElementById("magNorthOffset").value = d[21];
 				document.getElementById("calRefresh").checked = false;
+			}
+			if (windirAutocal) {
+				document.getElementById("magCoef").value = d[17];
+				document.getElementById("magXoffset").value = d[18];
+				document.getElementById("magYoffset").value = d[19];
+				document.getElementById("magZoffset").value = d[20];
+				document.getElementById("maxMagx").innerHTML = d[22];
+				document.getElementById("minMagx").innerHTML = d[23];
+				document.getElementById("maxMagy").innerHTML = d[24];
+				document.getElementById("minMagy").innerHTML = d[25];
+				document.getElementById("maxMagz").innerHTML = d[26];
+				document.getElementById("minMagz").innerHTML = d[27];
 			}
 		}
 
@@ -1054,15 +1137,10 @@
             data.push({key:"MQTT_TXINTERVALL",
                        value: mqtt_txintervall});
             
-            if( "password" != document.getElementById("MQTT_PASS").type){
-                var mqtt_pass = document.getElementById("MQTT_PASS").value;
-                data.push({key:"MQTT_PASS",
-                       value: mqtt_pass});
-                
-                document.getElementById("MQTT_PASS").value = "********";
-                document.getElementById("MQTT_PASS").type = "password";
-                
-            }            
+            var mqtt_pass = document.getElementById("MQTT_PASS").value;
+            data.push({key:"MQTT_PASS", 
+		value: mqtt_pass});
+                                           
                        
             sendData(url,data); 
              

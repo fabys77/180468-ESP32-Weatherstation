@@ -5,7 +5,6 @@
 #include <math.h>
 #include <QMC5883LCompass.h>
 
-#define SECT_ANGLE 45
 
 #define D_N  0
 #define D_NE 1
@@ -30,12 +29,22 @@ class WindSensor2 {
     QMC5883LCompass compass;
     bool hasMag;
     int magX=-1, magY=-1, magZ=-1;
-    byte windir_mode = Y_X_p;
     float windDirAngle = -1;
     float windDirAngleLast = -1;
     int ny=1, nz=0, dx=1, dz=0; //coef. gy-271 orientation
-    float offset_deg = 0;
-    float corr_coef = 1; //elliptic correction
+    byte windir_mode = Y_X_p;
+    float magCoef=1;
+    int Xoffset=0;
+    int Yoffset=0;
+    int Zoffset=0;
+    float northOffset=0;
+    int maxMagx=0;
+    int minMagx=0;
+    int maxMagy=0;
+    int minMagy=0;
+    int maxMagz=0;
+    int minMagz=0;
+    bool windirCal_mode=false;
 
    
     //                  N     NE    E    SE   S    SW    W     NW
@@ -86,14 +95,32 @@ class WindSensor2 {
     String getBeaufortDesc();
     void setCal(uint8_t _wind_s_ppr, float _wind_s_2piR); 
     int getRawADC();
+    //-----------
     void setwdirmode(byte _windir_mode);
     byte getwdirmode();
-
-    //New Setction
     void readCompass();
     int getXmag();
     int getYmag();
     int getZmag();
+    float getMagCoef();
+    void setMagCoef(float _magCoef);
+    int getXoffset();
+    void setXoffset(int _Xoffset);
+    int getYoffset();
+    void setYoffset(int _Yoffset);
+    int getZoffset();
+    void setZoffset(int _Zoffset);
+    float getNorthOffset();
+    void setNorthOffset(float _NorthOffset);
+    int getMaxMagx();
+    int getMinMagx();
+    int getMaxMagy();
+    int getMinMagy();
+    int getMaxMagz();
+    int getMinMagz();
+    float getWindDirAngle();
+    void calculateWindirCal();
+    void setWindirCal_mode(int _WindirCal_mode);
 
 };
 

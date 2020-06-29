@@ -40,7 +40,7 @@ void WindSensor2::determineWindDir() {
   if (hasMag){
     readCompass();
     calculateDir();
-    windDir=(int)fmod(fmod((windDirAngle+SECT_ANGLE),360),SECT_ANGLE);
+    windDir=(int)fmod(fmod((windDirAngle+22.5),360),45);
     lastDir=windDir;
     addWindDirAvg();}
   else{
@@ -209,13 +209,14 @@ void WindSensor2::readCompass() {
     magX = compass.getX();
     magY = compass.getY();
     magZ = compass.getZ();
-    //  Serial.print("X: ");
-    //  Serial.print(x);
-    //  Serial.print(" Y: ");
-    //  Serial.print(y);
-    //  Serial.print(" Z: ");
-    //  Serial.print(z);
-    //  Serial.println();
+    if (windirCal_mode){
+      if (magX>maxMagx) maxMagx=magX;
+      if (magX<minMagx) minMagx=magX;
+      if (magY>maxMagy) maxMagy=magY;
+      if (magY<minMagy) minMagy=magY;
+      if (magZ>maxMagz) maxMagz=magZ;
+      if (magZ<minMagz) minMagz=magZ;
+      }
   }else{
     magX = -1;
     magY = -1;
@@ -238,7 +239,7 @@ int WindSensor2::getZmag(){
 
 void WindSensor2::calculateDir(){
   double windir_rad;
-  windir_rad=atan2((corr_coef*(ny*magY+nz*magZ)),(dx*magX+dz*magZ));
+  windir_rad=atan2((magCoef*(ny*(magY-Yoffset) + nz*(magZ - Zoffset))),(dx*(magX-Xoffset)+dz*(magZ-Zoffset)));
   windDirAngle = (float) fmod(((windir_rad+2*PI)*180/PI),360.0);
 }
 
@@ -289,9 +290,47 @@ void WindSensor2::setwdirmode(byte _windir_mode){
   }
 }
 
-byte WindSensor2::getwdirmode(){
-  return windir_mode;
+byte WindSensor2::getwdirmode(){return windir_mode;}
+float WindSensor2::getMagCoef(){return magCoef;}
+void WindSensor2::setMagCoef(float _magCoef){_magCoef=magCoef;}
+int WindSensor2::getXoffset(){return Xoffset;}
+void WindSensor2::setXoffset(int _Xoffset){Xoffset=_Xoffset;}
+int WindSensor2::getYoffset(){return Yoffset;}
+void WindSensor2::setYoffset(int _Yoffset){Yoffset=_Yoffset;}
+int WindSensor2::getZoffset(){return Zoffset;}
+void WindSensor2::setZoffset(int _Zoffset){Zoffset=_Zoffset;}
+float WindSensor2::getNorthOffset(){return northOffset;}
+void WindSensor2::setNorthOffset(float _NorthOffset){  northOffset=_NorthOffset;}
+int WindSensor2::getMaxMagx(){return maxMagx;}
+int WindSensor2::getMinMagx(){return minMagx;}
+int WindSensor2::getMaxMagy(){return maxMagy;}
+int WindSensor2::getMinMagy(){return minMagy;}
+int WindSensor2::getMaxMagz(){return maxMagz;}
+int WindSensor2::getMinMagz(){return minMagz;}
+float WindSensor2::getWindDirAngle(){return windDirAngle;}
 
+void WindSensor2::calculateWindirCal(){
+    Xoffset=(maxMagx+minMagx)/2;
+    Yoffset=(maxMagy+minMagy)/2;
+    Zoffset=(maxMagz+minMagz)/2;
+    int avg_delta_x=(maxMagx-minMagx)/2;
+    int avg_delta_y=(maxMagy-minMagy)/2;
+    int avg_delta_z=(maxMagz-minMagz)/2;
+    switch (windir_mode) {
+      case Y_X_p:
+      case Y_X_n:if(avg_delta_y!=0) magCoef= avg_delta_x/avg_delta_y;break;
+      case Y_Z_p:
+      case Y_Z_n:if(avg_delta_y!=0) magCoef= avg_delta_z/avg_delta_y;break;
+      case Z_X_p:
+      case Z_X_n:if(avg_delta_z!=0) magCoef= avg_delta_x/avg_delta_z;break;
+      default: magCoef=-1;
+  }
 }
+
+void WindSensor2::setWindirCal_mode(int _WindirCal_mode){
+  if (_WindirCal_mode==0) windirCal_mode=false; else windirCal_mode=true;
+  }
+
+
 
 
