@@ -79,6 +79,7 @@
 
 #define hourMs 3600000 //ms (60 * 60 * 1000 ms)
 
+#define UPLOAD_INTERVAL_TO_SERVER 60000 //1 minute
 
 //thingspeak api and fields numbers
 //https://thingspeak.com/channels/535447/private_show
@@ -109,7 +110,7 @@ String senseBoxPM10Id;
 String senseBoxTVOCId;
 String senseBoxeCO2Id;
 
-unsigned long uploadInterval = hourMs;
+unsigned long uploadInterval = UPLOAD_INTERVAL_TO_SERVER;
 bool uploaded = false;
 
 
@@ -242,8 +243,11 @@ void setup() {
 
   calsettings=read_calsettings();
   Serial.println("CalValues:");
-  Serial.println(calsettings.wind_s_ppr);
+  Serial.print("wind_s_ppr:");
+  Serial.println(calsettings.wind_s_ppr);  
+  Serial.print("wind_s_2piR:");
   Serial.println(calsettings.wind_s_2piR);
+  Serial.print("rain_mm_pp:");
   Serial.println(calsettings.rain_mm_pp);
   
   ws.initWindSensor();
@@ -251,6 +255,18 @@ void setup() {
 
   ws.setCal(calsettings.wind_s_ppr, calsettings.wind_s_2piR);
   #ifdef USE_GY_WINDIR
+   Serial.print("Mode:");
+   Serial.println(calsettings.windir_mode);
+   Serial.print("MagnCoef:");
+   Serial.println(calsettings.magCoef);
+   Serial.print("Xoff:");
+   Serial.println(calsettings.Xoffset);
+   Serial.print("Yoff:");
+   Serial.println(calsettings.Yoffset);
+   Serial.print("Zoff:");
+   Serial.println(calsettings.Zoffset);
+   Serial.print("NorthOff:");
+   Serial.println(calsettings.northOffset);
    ws.setwdirmode(calsettings.windir_mode);
    ws.setMagCoef(calsettings.magCoef);
    ws.setXoffset(calsettings.Xoffset);
@@ -258,6 +274,14 @@ void setup() {
    ws.setZoffset(calsettings.Zoffset);
    ws.setNorthOffset(calsettings.northOffset);
   #endif
+  Serial.print("rain_mm_pp:");
+  Serial.println(calsettings.rain_mm_pp);
+  Serial.print("TVOC_base:");
+  Serial.println(calsettings.TVOC_base);
+  Serial.print("eCO2_base:");
+  Serial.println(calsettings.eCO2_base);
+  Serial.print("sgp30_count_base:");
+  Serial.println(calsettings.sgp30_count_base);
   rs.setCal(calsettings.rain_mm_pp);
   TVOC_base = calsettings.TVOC_base; 
   eCO2_base = calsettings.eCO2_base;
@@ -355,7 +379,7 @@ void loop() {
    
   #endif
 
- //fast rain estimation for webpage
+ //fast rain estimation for webpage and mqtt
   if (timeToRun(lastRainTime, rainInterval)){
     float rainAmountActual = 0;
     lastRainTime = millis();
@@ -375,9 +399,7 @@ void loop() {
     lastUploadTime = millis();
     Serial.println("Upload interval time passed");
     
-    windSpeedAvg = ws.getWindSpeedAvg();
-    windDirAvg = ws.getWindDirAvg();
-    rainAmountAvg = rs.getRainAmount() * hourMs / uploadInterval;
+    updateAvgData();
   
     if (thingspeakEnabled) {
       if (uploadToThingspeak())
@@ -412,6 +434,15 @@ void loop() {
     digitalWrite(solarRelay, batteryCharging);
   }
 }
+
+
+void updateAvgData(){
+    windSpeedAvg = ws.getWindSpeedAvg();
+    windDirAvg = ws.getWindDirAvg();
+    rainAmountAvg = rs.getRainAmount() * hourMs / uploadInterval;
+  }
+
+
 
 //reads the windsensor and stores the values in global variables
 void readWindSensor() {
@@ -616,14 +647,15 @@ void MQTT_Task( void* prarm ){
             /* Check if we need to send data to the MQTT Topic, currently hardcode intervall */
             uint32_t intervall_end = last_message +( Settings.mqtttxintervall * 60000 );
             if( ( Settings.mqtttxintervall > 0) && ( intervall_end  <  millis() ) ){
+              updateAvgData();
               last_message=millis();
               JsonString="";
               /* Every minute we send a new set of data to the mqtt channel */
               JsonObject data = root.createNestedObject("data");            
               JsonObject data_wind = data.createNestedObject("wind");
-              data_wind["direction"] = windDirAvg;
-              data_wind["speed"] = windSpeedAvg;
-              data["rain"] = rainAmountAvg;
+              data_wind["direction"] = ws.getWindDirAngle();
+              data_wind["speed"] = ws.getWindSpeed();
+              data["rain"] = rainAmountAvgFast;
               data["temperature"] = temperature;
               data["humidity"] = humidity;
               data["airpressure"] = pressure;

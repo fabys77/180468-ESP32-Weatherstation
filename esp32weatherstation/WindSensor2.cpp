@@ -310,6 +310,7 @@ int WindSensor2::getMinMagz(){return minMagz;}
 float WindSensor2::getWindDirAngle(){return windDirAngle;}
 
 void WindSensor2::calculateWindirCal(){
+  if (windirCal_mode){
     Xoffset=(maxMagx+minMagx)/2;
     Yoffset=(maxMagy+minMagy)/2;
     Zoffset=(maxMagz+minMagz)/2;
@@ -324,6 +325,7 @@ void WindSensor2::calculateWindirCal(){
       case Z_X_p:
       case Z_X_n:if(avg_delta_z!=0) magCoef= avg_delta_x/avg_delta_z;break;
       default: magCoef=-1;
+    }
   }
 }
 
