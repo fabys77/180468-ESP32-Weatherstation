@@ -146,6 +146,7 @@ float rawH2 = 0;
 float rawEthanol = 0;
 uint16_t TVOC_base = 0; 
 uint16_t eCO2_base = 0;
+uint16_t sgp30_count_base = 0;
 
 float batteryVoltage = 0; //v
 float batteryCharging = false;
@@ -260,6 +261,8 @@ void setup() {
   rs.setCal(calsettings.rain_mm_pp);
   TVOC_base = calsettings.TVOC_base; 
   eCO2_base = calsettings.eCO2_base;
+  sgp30_count_base = calsettings.sgp30_count_base;
+  
         
   if(false == bme.begin(bmeAddress)){
         hasBME280 = false;
@@ -532,7 +535,10 @@ void readSGP30() {
           rawH2 = sgp.rawH2;
           rawEthanol = sgp.rawEthanol;
       } 
-      if (sgp30Count == 30) {
+      if ((sgp30Count >= sgp30_count_base)&&(sgp30_count_base<2^15)) {
+        Serial.print("Salvataggio dati calibrazione dopo #misure:");
+        Serial.println(sgp30Count);
+        sgp30_count_base = 2*sgp30_count_base;
         sgp30Count = 0;
         if (! sgp.getIAQBaseline(&eCO2_base, &TVOC_base)) {
           Serial.println("Failed to get baseline readings");
@@ -542,6 +548,7 @@ void readSGP30() {
           Serial.print(" & TVOC: 0x"); Serial.println(TVOC_base, HEX);
           calsettings.TVOC_base = TVOC_base; 
           calsettings.eCO2_base = eCO2_base;
+          calsettings.sgp30_count_base = sgp30_count_base;
           write_calsettings(calsettings);
         }  
       }

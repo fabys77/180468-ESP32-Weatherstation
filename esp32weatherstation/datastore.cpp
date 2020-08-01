@@ -252,6 +252,7 @@ calsettings_t read_calsettings( void ){
     retval.rain_mm_pp = 0.33; //Amount of rain [mm] needs for a rain gauge pulse 
     retval.TVOC_base = 0; 
     retval.eCO2_base = 0;
+    retval.sgp30_count_base = 32;
     byte windir_mode = 0;
     float magCoef=1;
     int Xoffset=0;

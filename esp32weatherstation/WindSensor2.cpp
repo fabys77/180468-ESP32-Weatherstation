@@ -240,7 +240,7 @@ int WindSensor2::getZmag(){
 void WindSensor2::calculateDir(){
   double windir_rad;
   windir_rad=atan2((magCoef*(ny*(magY-Yoffset) + nz*(magZ - Zoffset))),(dx*(magX-Xoffset)+dz*(magZ-Zoffset)));
-  windDirAngle = (float) fmod(((windir_rad+2*PI)*180/PI),360.0);
+  windDirAngle = (float) fmod((((windir_rad+2*PI)*180/PI)-northOffset+360),360.0);
 }
 
 void WindSensor2::setwdirmode(byte _windir_mode){

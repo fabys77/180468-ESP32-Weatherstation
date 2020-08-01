@@ -30,6 +30,7 @@ typedef struct {
   int Yoffset;
   int Zoffset;
   float northOffset;
+  uint16_t sgp30_count_base;
 }calsettings_t;
 
 
